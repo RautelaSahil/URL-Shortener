@@ -2,39 +2,54 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>diddy to pipi</title>
+    <title>Shortly</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="hero">
-    <h1>Diddy to pipi</h1>
-
+    <h1>Shortly</h1>
+    <button id="logoutBtn" onclick="logout()" style="display:none;">Logout</button>
 </div>
-<div class="container">
-    <div class="section" id="shortenSection">
+
+<!-- AUTH SECTION -->
+<div class="container" id="authSection">
+    <div class="section expanded">
+        <h2>Login / Register</h2>
+
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+
+        <button onclick="login()">Login</button>
+        <button onclick="register()">Register</button>
+
+        <div class="result" id="authResult"></div>
+    </div>
+</div>
+
+<!-- APP SECTION -->
+<div class="container" id="appSection" style="display:none;">
+
+    <!-- SHORTEN -->
+    <div class="section expanded">
         <h2>Shorten URL</h2>
-        <p>Click here to shorten a URL</p>
-        <div class="arrow" id="shortenArrow">→</div>
-        <div class="form-container">
-            <input type="url" id="urlInput" placeholder="Enter long URL...">
-            <button onclick="shortenUrl()">Shorten</button>
-            <div class="result" id="shortenResult"></div>
+
+        <input type="url" id="urlInput" placeholder="Enter long URL...">
+        <button onclick="shortenUrl()">Shorten</button>
+        <div class="result" id="shortenResult"></div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="section expanded history">
+        <h2>History</h2>
+
+        <div class="history-list" id="historyList">
+            <!-- cards injected by JS -->
         </div>
     </div>
 
-    <div class="section" id="openSection">
-        <h2>Open Short URL</h2>
-        <p>Click here to open a shortened URL</p>
-        <div class="arrow" id="openArrow">←</div>
-        <div class="form-container">
-            <input type="text" id="shortUrlInput" placeholder="Enter short URL...">
-            <button onclick="openUrl()">Open</button>
-            <div class="result" id="openResult"></div>
-        </div>
-    </div>
 </div>
-    <script src="script.js"></script>
-</body>
-</html> 
 
+<script src="script.js"></script>
+</body>
+</html>

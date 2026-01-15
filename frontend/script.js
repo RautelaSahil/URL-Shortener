@@ -1,100 +1,110 @@
-const API_BASE = "http://localhost:5000";
+const API_BASE = "http://127.0.0.1:5000";
 
-//ui
-let currentState = "home"; 
-// "home" | "shorten" | "open"
+// ------------------ DOM ------------------
 
-const shortenSection = document.getElementById("shortenSection");
-const openSection = document.getElementById("openSection");
+const authSection = document.getElementById("authSection");
+const appSection = document.getElementById("appSection");
+const authResult = document.getElementById("authResult");
+const logoutBtn = document.getElementById("logoutBtn");
 
-const shortenArrow = document.getElementById("shortenArrow");
-const openArrow = document.getElementById("openArrow");
+// ------------------ Auth ------------------
 
-// from HOME
-shortenSection.addEventListener("click", () => {
-    if (currentState === "home") {
-        expandShorten();
+function register() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if (!username || !password) {
+        authResult.innerText = "Username and password required";
+        return;
     }
-});
 
-openSection.addEventListener("click", () => {
-    if (currentState === "home") {
-        expandOpen();
-    }
-});
-shortenArrow.addEventListener("click", (e) => {
-    e.stopPropagation();
-
-    if (currentState === "home") {
-        expandShorten();
-    } else if (currentState === "shorten") {
-        // Shorten is expanded → go to Open
-        expandOpen();
-    }
-});
-openArrow.addEventListener("click", (e) => {
-    e.stopPropagation();
-
-    if (currentState === "home") {
-        expandOpen();
-    } else if (currentState === "open") {
-        // Open is expanded → go to Shorten
-        expandShorten();
-    }
-});
-
-// state shift
-function expandShorten() {
-    shortenSection.classList.add("expanded");
-    shortenSection.classList.remove("collapsed");
-
-    openSection.classList.add("collapsed");
-    openSection.classList.remove("expanded");
-
-    // Arrow directions
-    shortenArrow.textContent = "←"; // go to Open
-    openArrow.textContent = "←";    // hidden but consistent
-
-    currentState = "shorten";
+    fetch(`${API_BASE}/api/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username, password })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            authResult.innerText = data.error;
+        } else {
+            authResult.innerText = "";
+            showApp();
+        }
+    })
+    .catch(() => {
+        authResult.innerText = "Server error";
+    });
 }
 
-function expandOpen() {
-    openSection.classList.add("expanded");
-    openSection.classList.remove("collapsed");
+function login() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
 
-    shortenSection.classList.add("collapsed");
-    shortenSection.classList.remove("expanded");
-
-    // Arrow directions
-    openArrow.textContent = "→";    // go to Shorten
-    shortenArrow.textContent = "→"; // hidden but consistent
-
-    currentState = "open";
+    fetch(`${API_BASE}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username, password })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            authResult.innerText = data.error;
+        } else {
+            authResult.innerText = "";
+            showApp();
+        }
+    })
+    .catch(() => {
+        authResult.innerText = "Server error";
+    });
 }
 
-// backend
-// POST /api/shorten
+function logout() {
+    fetch(`${API_BASE}/api/logout`, {
+        method: "POST",
+        credentials: "include"
+    })
+    .finally(() => {
+        authSection.style.display = "flex";
+        appSection.style.display = "none";
+        logoutBtn.style.display = "none";
+    });
+}
+
+// ------------------ App UI ------------------
+
+function showApp() {
+    authSection.style.display = "none";
+    appSection.style.display = "flex";
+    logoutBtn.style.display = "inline-block";
+    loadHistory();
+}
+
+// ------------------ Shorten ------------------
+
 function shortenUrl() {
     const input = document.getElementById("urlInput");
     const result = document.getElementById("shortenResult");
-
     const longUrl = input.value.trim();
 
     if (!longUrl) {
-        result.innerHTML = "<span style='color:red'>Please enter a URL</span>";
-        result.style.display = "block";
+        result.innerText = "Please enter a URL";
         return;
     }
 
     fetch(`${API_BASE}/api/shorten`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ long_url: longUrl })
     })
     .then(res => res.json())
     .then(data => {
         if (data.error) {
-            result.innerHTML = `<span style="color:red">${data.error}</span>`;
+            result.innerText = data.error;
         } else {
             result.innerHTML = `
                 Short URL:
@@ -102,27 +112,68 @@ function shortenUrl() {
                     ${data.short_url}
                 </a>
             `;
+            loadHistory();
         }
-        result.style.display = "block";
     })
     .catch(() => {
-        result.innerHTML = "<span style='color:red'>Server error</span>";
-        result.style.display = "block";
+        result.innerText = "Server error";
     });
 }
 
-// GET /<short_code> (backend handles redirect)
-function openUrl() {
-    const input = document.getElementById("shortUrlInput");
-    const result = document.getElementById("openResult");
+// ------------------ History (Cards) ------------------
 
-    const shortUrl = input.value.trim();
+function loadHistory() {
+    fetch(`${API_BASE}/api/urls`, {
+        method: "GET",
+        credentials: "include"
+    })
+    .then(res => {
+        if (res.status === 401) {
+            console.warn("Session not available yet");
+            return [];
+        }
+        return res.json();
+    })
+    .then(data => {
+        const list = document.getElementById("historyList");
+        list.innerHTML = "";
 
-    if (!shortUrl) {
-        result.innerHTML = "<span style='color:red'>Please enter a short URL</span>";
-        result.style.display = "block";
-        return;
-    }
+        data.forEach(item => {
+            const card = document.createElement("div");
+            card.className = "history-card";
 
-    window.open(shortUrl, "_blank");
+            card.innerHTML = `
+                <div class="history-info">
+                    <div class="history-title">${item.link_name}</div>
+                    <div class="history-url">
+                        <a href="${item.short_url}" target="_blank">
+                            ${item.short_url}
+                        </a>
+                    </div>
+                    <div class="history-date">${item.created_at}</div>
+                </div>
+                <div class="history-delete">
+                    <button onclick="deleteLink(${item.id})">🗑️</button>
+                </div>
+            `;
+
+            list.appendChild(card);
+        });
+    })
+    .catch(err => {
+        console.error("History load failed", err);
+    });
+}
+
+// ------------------ Delete ------------------
+
+function deleteLink(id) {
+    if (!confirm("Delete this link?")) return;
+
+    fetch(`${API_BASE}/api/urls/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+    })
+    .then(() => loadHistory())
+    .catch(() => alert("Delete failed"));
 }
