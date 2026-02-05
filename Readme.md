@@ -1,266 +1,168 @@
-🔗 Shortly — Authenticated URL Shortener
+🔗<div align="center">
 
-A full-stack URL shortening service with user authentication, built to understand backend fundamentals, security tradeoffs, and data ownership rather than just URL redirection.
+# 🔗 Shortly
+### Authenticated URL Shortener
 
-This project was developed as a learning exercise to design and implement a small backend system end-to-end, including authentication, persistence, and a simple frontend client.
+![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 
+**A full-stack URL shortening service with user authentication.** *Built to understand backend fundamentals, security tradeoffs, and data ownership.*
 
----
-
-✨ Features
-
-User registration and login
-
-Session-based authentication using secure cookies
-
-URL shortening with collision handling
-
-Per-user URL ownership and history
-
-Redirect handling with custom 404 page
-
-URL metadata extraction (page title)
-
-Delete URLs owned by the user
-
-Basic health check endpoint
-
-
+</div>
 
 ---
 
-🧱 Tech Stack
+## 📖 About The Project
 
-Backend
+**Shortly** is not just a redirect service; it is a learning exercise in designing a small backend system end-to-end. Unlike simple anonymous shorteners, Shortly focuses on **data ownership**—ensuring users can track, manage, and delete the links they create.
 
-Python, Flask
-
-MySQL
-
-Session-based authentication
-
-Password hashing using Werkzeug
-
-CORS enabled for frontend integration
-
-
-Frontend
-
-HTML, CSS, Vanilla JavaScript
-
-Fetch API with credentials
-
-Minimal UI for auth, shortening, and history
-
-
+**Key Design Decisions:**
+* **Session-Based Auth:** Chosen over JWT to explore server-side session management and secure cookies.
+* **Separation of Concerns:** Distinct separation between request handling (`app.py`) and database access (`db.py`).
+* **Defensive Coding:** Ownership-based data access ensures users can only modify their own resources.
 
 ---
 
-🏗️ Architecture Overview
+## ✨ Features
 
-Frontend (HTML / JS)
-        |
-        |  (Fetch API with credentials)
-        v
-Flask Backend (REST APIs)
-        |
-        |  (MySQL Connector)
-        v
-MySQL Database
-
-Key Design Decisions
-
-Session-based auth was chosen over JWT for simplicity and to understand cookie-based authentication.
-
-Separation of concerns between request handling (app.py) and database access (db.py).
-
-Ownership-based data access: users can only view or delete URLs they created.
-
-Metadata fetching (page title) is optional and fault-tolerant.
-
-
+| Category | Capability |
+| :--- | :--- |
+| **Authentication** | User registration, login, and secure session management. |
+| **Core Function** | URL shortening with collision handling & custom 404 redirects. |
+| **Data Ownership** | Users can view history and delete their own URLs. |
+| **Metadata** | Automatic extraction of page titles from target URLs (fault-tolerant). |
+| **Security** | Password hashing (Werkzeug) & CORS with credential support. |
 
 ---
 
-🔐 Authentication & Security Model
+## 🧱 Tech Stack
 
-Passwords are stored as hashed values using generate_password_hash.
+### Backend
+* **Language:** Python
+* **Framework:** Flask
+* **Database:** MySQL (using `mysql-connector-python`)
+* **Auth:** Server-side Sessions (Secure Cookies)
+* **Utilities:** `BeautifulSoup4` (Metadata), `Werkzeug` (Security)
 
-User sessions are stored server-side and tracked via secure cookies.
-
-All protected routes validate session presence.
-
-CORS is configured with supports_credentials=True for frontend integration.
-
-
-> ⚠️ Note:
-This project uses session cookies and is intended for local / learning use.
-CSRF protection, HTTPS enforcement, and production-grade secret management are listed as future improvements.
-
-
-
+### Frontend
+* **Core:** HTML5, CSS3, Vanilla JavaScript
+* **Network:** Fetch API (configured with `credentials: include`)
 
 ---
 
-📡 API Endpoints
+## 🏗️ Architecture
 
-Auth
-
-Method	Endpoint	Description
-
-POST	/api/register	Register a new user
-POST	/api/login	Login user
-POST	/api/logout	Logout user
-
-
-URL Management
-
-Method	Endpoint	Description
-
-POST	/api/shorten	Create short URL
-GET	/api/urls	Get user URL history
-DELETE	/api/urls/<id>	Delete a user-owned URL
-
-
-Redirect
-
-| GET | /<short_code> | Redirect to original URL |
-
+```mermaid
+graph TD
+    User[Frontend Client] -->|Fetch API + Credentials| API[Flask Backend]
+    API -->|Connector| DB[(MySQL Database)]
+    
+    subgraph "Data Flow"
+    API -- Hashed Passwords --> DB
+    API -- Short Codes --> DB
+    end
 
 ---
 
-🗄️ Database Schema
+## 📡 API Reference
 
-users
+### Authentication
 
-id (PK)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/register` | Register a new user account. |
+| `POST` | `/api/login` | Authenticate user and set session cookie. |
+| `POST` | `/api/logout` | Invalidate session and log out. |
 
-username (unique)
+### URL Management
 
-password_hash
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/shorten` | Create a new short URL (Requires Auth). |
+| `GET` | `/api/urls` | Retrieve the logged-in user's URL history. |
+| `DELETE` | `/api/urls/<id>` | Delete a specific URL (Ownership verified). |
 
-created_at
+### Redirection
 
-
-dmforlink
-
-id (PK)
-
-original (original URL)
-
-short_code (unique)
-
-link_name
-
-user_id (FK → users.id)
-
-created_at
-
-
-Foreign key constraints ensure referential integrity and cascading deletes.
-
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/<short_code>` | Redirects to the original URL or shows custom 404. |
 
 ---
 
-⚙️ Running Locally
+## 🗄️ Database Schema
 
-1. Clone Repository
+### `users` table
+* **id** (PK): Integer, Auto-increment
+* **username**: Varchar (Unique)
+* **password_hash**: Varchar (Stored securely)
+* **created_at**: Timestamp
 
-git clone <repo-url>
+### `dmforlink` table
+* **id** (PK): Integer, Auto-increment
+* **original**: Text (Original URL)
+* **short_code**: Varchar (Unique identifier)
+* **link_name**: Varchar (Scraped page title)
+* **user_id** (FK): Links to `users.id` (Cascading delete)
+* **created_at**: Timestamp
+
+---
+
+## ⚙️ Local Setup
+
+Follow these steps to get the project running on your machine.
+
+### 1. Clone the Repository
+```bash
+git clone <your-repo-url>
 cd url-shortener
 
-2. Setup Environment
-
-Create a .env file:
-
+### 2. Configure Environment
+Create a `.env` file in the root directory:
+```ini
 DB_HOST=localhost
 DB_USER=your_user
 DB_PASSWORD=your_password
 DB_NAME=url_shortner
-FLASK_SECRET_KEY=your_secret_key
+FLASK_SECRET_KEY=generate_a_strong_random_key_here
 
-3. Setup Database
-
+### 3. Initialize Database
+Log into your MySQL instance and run the source SQL:
+```sql
 SOURCE database.sql;
 
-4. Install Dependencies
-
+### 4. Install Dependencies
+```bash
 pip install flask flask-cors mysql-connector-python python-dotenv requests beautifulsoup4
 
-5. Run Backend
-
+### 5. Run the Application
+**Backend:**
+```bash
 python app.py
-
-6. Run Frontend
-
-Open index.html using a local server (e.g. Live Server).
-
+**Frontend:**
+Open `index.html` using a generic local server (e.g., VS Code Live Server).
 
 ---
 
-⚠️ Known Limitations
+## 🚧 Limitations & Roadmap
 
-No rate limiting (vulnerable to abuse)
+This project focuses on correctness over scale. Current limitations include:
 
-No CSRF protection
-
-No async background jobs for metadata fetching
-
-No connection pooling
-
-Not deployed (local environment only)
-
-Short code generation is probabilistic (collision-checked but not deterministic)
-
-
-These limitations are intentional learning boundaries and documented tradeoffs.
-
+* [ ] **Rate Limiting:** Currently vulnerable to abuse.
+* [ ] **Async Jobs:** Metadata fetching is synchronous (blocks request).
+* [ ] **CSRF Protection:** Standard token protection is planned.
+* [ ] **HTTPS:** Production deployment would enforce HTTPS.
+* [ ] **Scalability:** Short code generation is probabilistic.
 
 ---
 
-🚀 Future Improvements
+## 🎯 Learning Outcomes
 
-JWT-based auth alternative
+This project was built to demonstrate proficiency in:
+1.  **Request Lifecycle:** Managing HTTP verbs, headers, and status codes.
+2.  **State Management:** Handling user sessions without relying on JWTs.
+3.  **Relational Design:** writing efficient SQL schemas with Foreign Keys.
+4.  **Security First:** Implementing salt/hash for passwords and ownership checks for data access.
 
-Rate limiting & abuse prevention
-
-URL expiration support
-
-Click analytics
-
-Redis caching
-
-Async metadata fetch
-
-Dockerized deployment
-
-HTTPS & CSRF protection
-
-
-
----
-
-🎯 Learning Goals
-
-This project focuses on:
-
-Backend request lifecycle
-
-Auth flows and session management
-
-Database schema design
-
-Ownership-based access control
-
-Error handling and defensive coding
-
-Full-stack integration
-
-
-
----
-
-🧠 Final Note
-
-This project prioritizes clarity and correctness over scale.
-It is designed as a stepping stone toward building larger, production-grade backend systems.
