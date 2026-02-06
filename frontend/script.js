@@ -7,6 +7,26 @@ const appSection = document.getElementById("appSection");
 const authResult = document.getElementById("authResult");
 const logoutBtn = document.getElementById("logoutBtn");
 
+const authForm = document.getElementById("authForm");
+const togglePasswordBtn = document.getElementById("togglePassword");
+const passwordInput = document.getElementById("password");
+
+// ------------------ Auth UX ------------------
+
+// Submit login on Enter (form submit)
+authForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    login();
+});
+
+// Toggle password visibility
+togglePasswordBtn.addEventListener("click", () => {
+    const isHidden = passwordInput.type === "password";
+
+    passwordInput.type = isHidden ? "text" : "password";
+    togglePasswordBtn.textContent = isHidden ? "HIDE" : "SHOW";
+});
+
 // ------------------ Auth ------------------
 
 function register() {
@@ -41,6 +61,11 @@ function register() {
 function login() {
     const username = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value.trim();
+
+    if (!username || !password) {
+        authResult.innerText = "Username and password required";
+        return;
+    }
 
     fetch(`${API_BASE}/api/login`, {
         method: "POST",
@@ -120,7 +145,7 @@ function shortenUrl() {
     });
 }
 
-// ------------------ History (Cards) ------------------
+// ------------------ History ------------------
 
 function loadHistory() {
     fetch(`${API_BASE}/api/urls`, {
@@ -128,10 +153,7 @@ function loadHistory() {
         credentials: "include"
     })
     .then(res => {
-        if (res.status === 401) {
-            console.warn("Session not available yet");
-            return [];
-        }
+        if (res.status === 401) return [];
         return res.json();
     })
     .then(data => {

@@ -93,6 +93,31 @@ button:hover {
     opacity: 0.9;
 }
 
+/* ------------------ Password Toggle ------------------ */
+
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper input {
+    padding-right: 40px;
+}
+
+.password-wrapper button {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #2563eb;
+    padding: 0;
+}
+
+
 /* ------------------ Result Box ------------------ */
 
 .result {

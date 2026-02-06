@@ -6,7 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from db import (
+from .db import (
     short_code_exists,
     insert_url_with_name,
     get_original,
