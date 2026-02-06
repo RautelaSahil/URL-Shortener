@@ -52,9 +52,8 @@
 
 ---
 
-## 🏗️ Architecture
+🏗️ Architecture
 
-```mermaid
 graph TD
     User[Frontend Client] -->|Fetch API + Credentials| API[Flask Backend]
     API -->|Connector| DB[(MySQL Database)]
@@ -64,105 +63,166 @@ graph TD
     API -- Short Codes --> DB
     end
 
----
 
-## 📡 API Reference
+📡 API Reference
 
-### Authentication
+Authentication
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/api/register` | Register a new user account. |
-| `POST` | `/api/login` | Authenticate user and set session cookie. |
-| `POST` | `/api/logout` | Invalidate session and log out. |
+Method
 
-### URL Management
+Endpoint
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/api/shorten` | Create a new short URL (Requires Auth). |
-| `GET` | `/api/urls` | Retrieve the logged-in user's URL history. |
-| `DELETE` | `/api/urls/<id>` | Delete a specific URL (Ownership verified). |
+Description
 
-### Redirection
+POST
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/<short_code>` | Redirects to the original URL or shows custom 404. |
+/api/register
 
----
+Register a new user account.
 
-## 🗄️ Database Schema
+POST
 
-### `users` table
-* **id** (PK): Integer, Auto-increment
-* **username**: Varchar (Unique)
-* **password_hash**: Varchar (Stored securely)
-* **created_at**: Timestamp
+/api/login
 
-### `dmforlink` table
-* **id** (PK): Integer, Auto-increment
-* **original**: Text (Original URL)
-* **short_code**: Varchar (Unique identifier)
-* **link_name**: Varchar (Scraped page title)
-* **user_id** (FK): Links to `users.id` (Cascading delete)
-* **created_at**: Timestamp
+Authenticate user and set session cookie.
 
----
+POST
 
-## ⚙️ Local Setup
+/api/logout
+
+Invalidate session and log out.
+
+URL Management
+
+Method
+
+Endpoint
+
+Description
+
+POST
+
+/api/shorten
+
+Create a new short URL (Requires Auth).
+
+GET
+
+/api/urls
+
+Retrieve the logged-in user's URL history.
+
+DELETE
+
+/api/urls/<id>
+
+Delete a specific URL (Ownership verified).
+
+Redirection
+
+Method
+
+Endpoint
+
+Description
+
+GET
+
+/<short_code>
+
+Redirects to the original URL or shows custom 404.
+
+🗄️ Database Schema
+
+users table
+
+id (PK): Integer, Auto-increment
+
+username: Varchar (Unique)
+
+password_hash: Varchar (Stored securely)
+
+created_at: Timestamp
+
+dmforlink table
+
+id (PK): Integer, Auto-increment
+
+original: Text (Original URL)
+
+short_code: Varchar (Unique identifier)
+
+link_name: Varchar (Scraped page title)
+
+user_id (FK): Links to users.id (Cascading delete)
+
+created_at: Timestamp
+
+⚙️ Local Setup
 
 Follow these steps to get the project running on your machine.
 
-### 1. Clone the Repository
-```bash
+1. Clone the Repository
+
 git clone <your-repo-url>
 cd url-shortener
 
-### 2. Configure Environment
-Create a `.env` file in the root directory:
-```ini
+
+2. Configure Environment
+
+Create a .env file in the root directory:
+
 DB_HOST=localhost
 DB_USER=your_user
 DB_PASSWORD=your_password
 DB_NAME=url_shortner
 FLASK_SECRET_KEY=generate_a_strong_random_key_here
 
-### 3. Initialize Database
+
+3. Initialize Database
+
 Log into your MySQL instance and run the source SQL:
-```sql
+
 SOURCE database.sql;
 
-### 4. Install Dependencies
-```bash
+
+4. Install Dependencies
+
 pip install flask flask-cors mysql-connector-python python-dotenv requests beautifulsoup4
 
-### 5. Run the Application
-**Backend:**
-```bash
+
+5. Run the Application
+
+Backend:
+
 python app.py
-**Frontend:**
-Open `index.html` using a generic local server (e.g., VS Code Live Server).
 
----
 
-## 🚧 Limitations & Roadmap
+Frontend:
+Open index.html using a generic local server (e.g., VS Code Live Server).
+
+🚧 Limitations & Roadmap
 
 This project focuses on correctness over scale. Current limitations include:
 
-* [ ] **Rate Limiting:** Currently vulnerable to abuse.
-* [ ] **Async Jobs:** Metadata fetching is synchronous (blocks request).
-* [ ] **CSRF Protection:** Standard token protection is planned.
-* [ ] **HTTPS:** Production deployment would enforce HTTPS.
-* [ ] **Scalability:** Short code generation is probabilistic.
+[ ] Rate Limiting: Currently vulnerable to abuse.
 
----
+[ ] Async Jobs: Metadata fetching is synchronous (blocks request).
 
-## 🎯 Learning Outcomes
+[ ] CSRF Protection: Standard token protection is planned.
+
+[ ] HTTPS: Production deployment would enforce HTTPS.
+
+[ ] Scalability: Short code generation is probabilistic.
+
+🎯 Learning Outcomes
 
 This project was built to demonstrate proficiency in:
-1.  **Request Lifecycle:** Managing HTTP verbs, headers, and status codes.
-2.  **State Management:** Handling user sessions without relying on JWTs.
-3.  **Relational Design:** writing efficient SQL schemas with Foreign Keys.
+
+Request Lifecycle: Managing HTTP verbs, headers, and status codes.
+
+State Management: Handling user sessions without relying on JWTs.
+
+Relational Design: Writing efficient SQL schemas with Foreign Keys. Keys.
 4.  **Security First:** Implementing salt/hash for passwords and ownership checks for data access.
 
