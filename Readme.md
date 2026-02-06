@@ -1,14 +1,16 @@
-🔗<div align="center">
+<div align="center">
 
 # 🔗 Shortly
+
 ### Authenticated URL Shortener
 
-![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)
-![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB?style=for-the-badge\&logo=python\&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge\&logo=flask\&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge\&logo=mysql\&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge\&logo=javascript\&logoColor=black)
 
-**A full-stack URL shortening service with user authentication.** *Built to understand backend fundamentals, security tradeoffs, and data ownership.*
+**A full-stack URL shortening service with user authentication.**
+*Built to understand backend fundamentals, security tradeoffs, and data ownership.*
 
 </div>
 
@@ -16,213 +18,179 @@
 
 ## 📖 About The Project
 
-**Shortly** is not just a redirect service; it is a learning exercise in designing a small backend system end-to-end. Unlike simple anonymous shorteners, Shortly focuses on **data ownership**—ensuring users can track, manage, and delete the links they create.
+**Shortly** is a focused learning project designed to explore how a real backend system is structured end-to-end. Rather than being an anonymous redirect tool, the system emphasizes **user ownership of data**—every shortened URL is tied to an authenticated account and governed by access rules.
 
-**Key Design Decisions:**
-* **Session-Based Auth:** Chosen over JWT to explore server-side session management and secure cookies.
-* **Separation of Concerns:** Distinct separation between request handling (`app.py`) and database access (`db.py`).
-* **Defensive Coding:** Ownership-based data access ensures users can only modify their own resources.
+### Design Philosophy
+
+* **Session-Based Authentication**
+  Server-side sessions were chosen instead of JWTs to gain hands-on experience with cookie security, session invalidation, and server-managed state.
+
+* **Clear Separation of Concerns**
+  HTTP request handling (`app.py`) and persistence logic (`db.py`) are intentionally separated to keep business logic testable and maintainable.
+
+* **Defensive Access Control**
+  All URL operations are ownership-checked at the database level to prevent horizontal privilege escalation.
 
 ---
 
 ## ✨ Features
 
-| Category | Capability |
-| :--- | :--- |
-| **Authentication** | User registration, login, and secure session management. |
-| **Core Function** | URL shortening with collision handling & custom 404 redirects. |
-| **Data Ownership** | Users can view history and delete their own URLs. |
-| **Metadata** | Automatic extraction of page titles from target URLs (fault-tolerant). |
-| **Security** | Password hashing (Werkzeug) & CORS with credential support. |
+| Category           | Capability                                                       |
+| ------------------ | ---------------------------------------------------------------- |
+| **Authentication** | User registration, login, logout, and secure session handling    |
+| **URL Shortening** | Collision-resistant short-code generation                        |
+| **User Ownership** | Per-user URL history and delete permissions                      |
+| **Metadata**       | Automatic page-title extraction (gracefully degrades on failure) |
+| **Security**       | Password hashing with Werkzeug, CORS with credentials            |
 
 ---
 
 ## 🧱 Tech Stack
 
 ### Backend
+
 * **Language:** Python
 * **Framework:** Flask
-* **Database:** MySQL (using `mysql-connector-python`)
-* **Auth:** Server-side Sessions (Secure Cookies)
-* **Utilities:** `BeautifulSoup4` (Metadata), `Werkzeug` (Security)
+* **Database:** MySQL (`mysql-connector-python`)
+* **Authentication:** Server-side sessions (secure cookies)
+* **Utilities:** BeautifulSoup4, Requests, Werkzeug
 
 ### Frontend
-* **Core:** HTML5, CSS3, Vanilla JavaScript
-* **Network:** Fetch API (configured with `credentials: include`)
+
+* **Markup & Style:** HTML5, CSS3
+* **Logic:** Vanilla JavaScript
+* **Networking:** Fetch API (`credentials: include`)
 
 ---
 
-🏗️ Architecture
+## 🏗️ Architecture
 
+```mermaid
 graph TD
-    User[Frontend Client] -->|Fetch API + Credentials| API[Flask Backend]
-    API -->|Connector| DB[(MySQL Database)]
-    
-    subgraph "Data Flow"
-    API -- Hashed Passwords --> DB
-    API -- Short Codes --> DB
+    Client[Frontend Client] -->|Fetch API + Cookies| API[Flask Backend]
+    API -->|SQL Connector| DB[(MySQL Database)]
+
+    subgraph Backend Responsibilities
+        API -->|Hash Passwords| DB
+        API -->|Verify Ownership| DB
+        API -->|Store Short Codes| DB
     end
+```
 
+The backend acts as the sole authority for authentication, authorization, and data validation. The frontend remains stateless and relies entirely on session cookies.
 
-📡 API Reference
+---
 
-Authentication
+## 📡 API Reference
 
-Method
+### Authentication
 
-Endpoint
+| Method | Endpoint        | Description                          |
+| ------ | --------------- | ------------------------------------ |
+| POST   | `/api/register` | Register a new user                  |
+| POST   | `/api/login`    | Authenticate user and create session |
+| POST   | `/api/logout`   | Destroy session and log out          |
 
-Description
+### URL Management
 
-POST
+| Method | Endpoint         | Description                        |
+| ------ | ---------------- | ---------------------------------- |
+| POST   | `/api/shorten`   | Create a short URL (auth required) |
+| GET    | `/api/urls`      | Fetch user-owned URLs              |
+| DELETE | `/api/urls/<id>` | Delete URL (ownership enforced)    |
 
-/api/register
+### Redirection
 
-Register a new user account.
+| Method | Endpoint        | Description                 |
+| ------ | --------------- | --------------------------- |
+| GET    | `/<short_code>` | Redirect or show custom 404 |
 
-POST
+---
 
-/api/login
+## 🗄️ Database Schema
 
-Authenticate user and set session cookie.
+### `users`
 
-POST
+* `id` (PK) — Integer, auto-increment
+* `username` — VARCHAR, unique
+* `password_hash` — VARCHAR, securely stored
+* `created_at` — Timestamp
 
-/api/logout
+### `dmforlink`
 
-Invalidate session and log out.
+* `id` (PK) — Integer, auto-increment
+* `original` — TEXT (original URL)
+* `short_code` — VARCHAR, unique
+* `link_name` — VARCHAR (scraped title)
+* `user_id` (FK) — References `users.id` (cascade delete)
+* `created_at` — Timestamp
 
-URL Management
+---
 
-Method
+## ⚙️ Local Setup
 
-Endpoint
+### 1. Clone the Repository
 
-Description
-
-POST
-
-/api/shorten
-
-Create a new short URL (Requires Auth).
-
-GET
-
-/api/urls
-
-Retrieve the logged-in user's URL history.
-
-DELETE
-
-/api/urls/<id>
-
-Delete a specific URL (Ownership verified).
-
-Redirection
-
-Method
-
-Endpoint
-
-Description
-
-GET
-
-/<short_code>
-
-Redirects to the original URL or shows custom 404.
-
-🗄️ Database Schema
-
-users table
-
-id (PK): Integer, Auto-increment
-
-username: Varchar (Unique)
-
-password_hash: Varchar (Stored securely)
-
-created_at: Timestamp
-
-dmforlink table
-
-id (PK): Integer, Auto-increment
-
-original: Text (Original URL)
-
-short_code: Varchar (Unique identifier)
-
-link_name: Varchar (Scraped page title)
-
-user_id (FK): Links to users.id (Cascading delete)
-
-created_at: Timestamp
-
-⚙️ Local Setup
-
-Follow these steps to get the project running on your machine.
-
-1. Clone the Repository
-
+```bash
 git clone <your-repo-url>
 cd url-shortener
+```
 
+### 2. Configure Environment
 
-2. Configure Environment
+Create a `.env` file in the project root:
 
-Create a .env file in the root directory:
-
+```env
 DB_HOST=localhost
 DB_USER=your_user
 DB_PASSWORD=your_password
 DB_NAME=url_shortner
-FLASK_SECRET_KEY=generate_a_strong_random_key_here
+FLASK_SECRET_KEY=generate_a_strong_random_key
+```
 
+### 3. Initialize Database
 
-3. Initialize Database
-
-Log into your MySQL instance and run the source SQL:
-
+```sql
 SOURCE database.sql;
+```
 
+### 4. Install Dependencies
 
-4. Install Dependencies
-
+```bash
 pip install flask flask-cors mysql-connector-python python-dotenv requests beautifulsoup4
+```
 
+### 5. Run the Application
 
-5. Run the Application
+**Backend**
 
-Backend:
-
+```bash
 python app.py
+```
 
+**Frontend**
+Serve `index.html` using a local static server (e.g. VS Code Live Server).
 
-Frontend:
-Open index.html using a generic local server (e.g., VS Code Live Server).
+---
 
-🚧 Limitations & Roadmap
+## 🚧 Limitations & Roadmap
 
 This project focuses on correctness over scale. Current limitations include:
 
-[ ] Rate Limiting: Currently vulnerable to abuse.
+* [ ] **Rate Limiting** — Currently vulnerable to abuse.
+* [ ] **Async Jobs** — Metadata fetching is synchronous (blocks request).
+* [ ] **CSRF Protection** — Standard token protection is planned.
+* [ ] **HTTPS** — Production deployment would enforce HTTPS.
+* [ ] **Scalability** — Short code generation is probabilistic.
 
-[ ] Async Jobs: Metadata fetching is synchronous (blocks request).
+---
 
-[ ] CSRF Protection: Standard token protection is planned.
+## 🎯 Learning Outcomes
 
-[ ] HTTPS: Production deployment would enforce HTTPS.
+This project demonstrates understanding of:
 
-[ ] Scalability: Short code generation is probabilistic.
-
-🎯 Learning Outcomes
-
-This project was built to demonstrate proficiency in:
-
-Request Lifecycle: Managing HTTP verbs, headers, and status codes.
-
-State Management: Handling user sessions without relying on JWTs.
-
-Relational Design: Writing efficient SQL schemas with Foreign Keys. Keys.
-4.  **Security First:** Implementing salt/hash for passwords and ownership checks for data access.
-
+* HTTP request lifecycles and RESTful design
+* Session-based state management
+* Relational database modeling with foreign keys
+* Secure password storage and access control enforcement
+* Clean separation between transport, logic, and persistence layers
