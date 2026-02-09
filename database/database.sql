@@ -2,12 +2,7 @@ create database url_shortner;
 
 use url_shortner;
 
-create table dmforlink(
-    id int AUTO_INCREMENT primary key,
-    original text NOT NULL,
-    pipiurl varchar(10) NOT NULL unique,
-    dob timestamp default current_timestamp
-);
+
 
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -16,9 +11,16 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE dmforlink
-ADD COLUMN link_name VARCHAR(255),
-ADD COLUMN user_id INT,
-ADD CONSTRAINT fk_user
-FOREIGN KEY (user_id) REFERENCES users(id)
-ON DELETE CASCADE;
+
+CREATE TABLE link (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    original TEXT NOT NULL,
+    short VARCHAR(10) NOT NULL UNIQUE,
+    dob TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    link_name VARCHAR(255),
+    user_id INT,
+    CONSTRAINT fk_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+);

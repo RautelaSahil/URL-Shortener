@@ -2,28 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Shortly</title>
+    <title>Shortly - URL Shortener</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 
 <div class="hero">
-    <h1>Shortly</h1>
-    <button id="logoutBtn" onclick="logout()" style="display:none;">Logout</button>
+    <h1><i class="fas fa-link" style="margin-right: 10px;"></i>Shortly</h1>
+    <button id="logoutBtn" onclick="logout()" style="display:none;">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
 </div>
 
 <!-- AUTH SECTION -->
-<div class="container" id="authSection">
+<div class="container" id="authSection" style="display: flex;">
     <div class="section expanded">
-        <h2>Login / Register</h2>
+        <h2><i class="fas fa-user-lock"></i> Login / Register</h2>
 
         <form id="authForm">
-
             <input
                 type="text"
                 id="username"
                 placeholder="Username"
                 required
+                autocomplete="username"
             >
 
             <div class="password-wrapper">
@@ -32,19 +36,23 @@
                     id="password"
                     placeholder="Password"
                     required
+                    autocomplete="current-password"
                 >
                 <button
-    type="button"
-    id="togglePassword"
-    aria-label="Toggle password visibility"
->
-    SHOW
-</button>
-
+                    type="button"
+                    id="togglePassword"
+                    aria-label="Toggle password visibility"
+                >
+                    <!-- Icon will be added by JavaScript -->
+                </button>
             </div>
 
-            <button type="submit">Login</button>
-            <button type="button" onclick="register()">Register</button>
+            <button type="submit">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+            <button type="button" onclick="register()">
+                <i class="fas fa-user-plus"></i> Register
+            </button>
 
             <div class="result" id="authResult"></div>
         </form>
@@ -53,46 +61,32 @@
 
 <!-- APP SECTION -->
 <div class="container" id="appSection" style="display:none;">
-
     <!-- SHORTEN -->
     <div class="section expanded">
-        <h2>Shorten URL</h2>
+        <h2><i class="fas fa-compress-alt"></i> Shorten URL</h2>
 
-        <input type="url" id="urlInput" placeholder="Enter long URL...">
-        <button onclick="shortenUrl()">Shorten</button>
+        <input type="url" id="urlInput" placeholder="https://example.com/very-long-url..." autocomplete="off">
+        <button onclick="shortenUrl()">
+            <i class="fas fa-magic"></i> Shorten URL
+        </button>
         <div class="result" id="shortenResult"></div>
     </div>
 
     <!-- HISTORY -->
     <div class="section expanded history">
-        <h2>History</h2>
+        <h2><i class="fas fa-history"></i> History</h2>
 
         <div class="history-list" id="historyList">
             <!-- cards injected by JS -->
         </div>
     </div>
-
 </div>
 
 <script src="script.js"></script>
-
 <script>
-    // ---- Auth Form Enhancements ----
-
-    const authForm = document.getElementById("authForm");
-    const togglePasswordBtn = document.getElementById("togglePassword");
-    const passwordInput = document.getElementById("password");
-
-    // Submit login on Enter
-    authForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        login();
-    });
-
-    // Toggle password visibility
-    togglePasswordBtn.addEventListener("click", () => {
-        passwordInput.type =
-            passwordInput.type === "password" ? "text" : "password";
+    // Check if user is already logged in when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        checkAuthStatus();
     });
 </script>
 

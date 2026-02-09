@@ -4,10 +4,30 @@
     box-sizing: border-box;
 }
 
+:root {
+    --minimal-dark-bg: #0f0f0f;
+    --minimal-dark-surface: #1a1a1a;
+    --minimal-dark-surface-lighter: #2a2a2a;
+    --minimal-dark-surface-lightest: #333;
+    --minimal-dark-border: #444;
+    --minimal-dark-border-light: #555;
+    --minimal-dark-text-primary: #f0f0f0;
+    --minimal-dark-text-secondary: #b0b0b0;
+    --minimal-dark-text-tertiary: #777;
+    --minimal-dark-accent-primary: #6200ee;
+    --minimal-dark-accent-secondary: #bb86fc;
+    --minimal-dark-accent-hover: #7c29ff;
+    --minimal-dark-success: #03dac6;
+    --minimal-dark-error: #cf6679;
+    --minimal-dark-warning: #ffb347;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    padding: 40px;
-    background: #f5f5f5;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background-color: var(--minimal-dark-bg);
+    color: var(--minimal-dark-text-primary);
+    min-height: 100vh;
+    padding: 20px;
 }
 
 /* ------------------ Header ------------------ */
@@ -16,139 +36,282 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    max-width: 900px;
-    margin: 0 auto 30px auto;
+    max-width: 1200px;
+    margin: 0 auto 40px auto;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--minimal-dark-border);
 }
 
 .hero h1 {
     font-size: 2.5rem;
-}
-
-.hero button {
-    padding: 8px 14px;
-    cursor: pointer;
+    background: linear-gradient(to right, var(--minimal-dark-accent-primary), var(--minimal-dark-accent-secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: 1px;
 }
 
 /* ------------------ Layout ------------------ */
 
 .container {
-    max-width: 900px;
+    max-width: 1200px;
     margin: 0 auto;
     display: flex;
-    gap: 24px;
+    gap: 40px;
     flex-wrap: wrap;
-    position: relative;
-}
-
-/* vertical divider for larger screens */
-@media (min-width: 700px) {
-    .container::before {
-        content: "";
-        position: absolute;
-        left: 50%;
-        top: 0;
-        height: 100%;
-        width: 1px;
-        background: #e5e7eb;
-        transform: translateX(-12px);
-    }
 }
 
 /* ------------------ Sections ------------------ */
 
 .section {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
+    background: var(--minimal-dark-surface);
+    padding: 30px;
+    border-radius: 12px;
     flex: 1;
-    min-width: 280px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    min-width: 320px;
+    border: 1px solid var(--minimal-dark-border);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.section:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
 }
 
 .section h2 {
-    margin-bottom: 15px;
-}
-
-/* slightly distinct history panel */
-.section.history {
-    background: #fafafa;
-    border: 1px solid #e5e7eb;
+    margin-bottom: 25px;
+    font-size: 1.8rem;
+    color: var(--minimal-dark-text-primary);
+    border-bottom: 2px solid var(--minimal-dark-border);
+    padding-bottom: 10px;
 }
 
 /* ------------------ Inputs & Buttons ------------------ */
 
 input {
     width: 100%;
-    padding: 9px;
-    margin-bottom: 10px;
+    padding: 14px 16px;
+    margin-bottom: 15px;
     font-size: 1rem;
+    background-color: var(--minimal-dark-surface-lighter);
+    color: var(--minimal-dark-text-primary);
+    border: 1px solid var(--minimal-dark-border);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    line-height: 1.5;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--minimal-dark-accent-primary);
+    box-shadow: 0 0 0 2px rgba(98, 0, 238, 0.2);
+    background-color: #2d2d2d;
+}
+
+input::placeholder {
+    color: var(--minimal-dark-text-tertiary);
 }
 
 button {
-    padding: 8px 12px;
+    padding: 12px 24px;
     cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 8px;
+    transition: all 0.3s ease;
 }
 
 button:hover {
-    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* ------------------ Password Toggle ------------------ */
+button:active {
+    transform: translateY(0);
+}
+
+/* ------------------ Auth Buttons ------------------ */
+
+#authForm button[type="submit"] {
+    background-color: var(--minimal-dark-accent-primary);
+    color: white;
+    background-image: linear-gradient(to bottom, var(--minimal-dark-accent-primary), #5000c8);
+    margin-right: 10px;
+}
+
+#authForm button[type="submit"]:hover {
+    background-color: var(--minimal-dark-accent-hover);
+    background-image: linear-gradient(to bottom, var(--minimal-dark-accent-hover), var(--minimal-dark-accent-primary));
+    box-shadow: 0 5px 15px rgba(98, 0, 238, 0.4);
+}
+
+#authForm button[type="button"] {
+    background-color: var(--minimal-dark-surface-lighter);
+    color: var(--minimal-dark-text-secondary);
+    border: 1px solid var(--minimal-dark-border);
+}
+
+#authForm button[type="button"]:hover {
+    background-color: var(--minimal-dark-surface-lightest);
+    color: var(--minimal-dark-text-primary);
+}
+
+#logoutBtn {
+    background-color: transparent;
+    color: var(--minimal-dark-text-secondary);
+    border: 1px solid var(--minimal-dark-border);
+}
+
+#logoutBtn:hover {
+    color: var(--minimal-dark-error);
+    border-color: var(--minimal-dark-error);
+}
+
+/* ------------------ Password Toggle (Color Change Icon) ------------------ */
 
 .password-wrapper {
     position: relative;
+    margin-bottom: 20px;
 }
 
 .password-wrapper input {
-    padding-right: 40px;
+    padding-right: 50px;
+    margin-bottom: 0;
+    height: 48px;
 }
 
-.password-wrapper button {
+.password-wrapper #togglePassword {
     position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
+    right: 10px;
+    top: 0;
+    bottom: 0;
+    margin: auto 0;
+    background: transparent;
     border: none;
     cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #2563eb;
+    font-size: 1.2rem;
     padding: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: var(--minimal-dark-accent-secondary);
+    transition: all 0.3s ease;
 }
 
+.password-wrapper #togglePassword:hover {
+    background: rgba(98, 0, 238, 0.1);
+    color: var(--minimal-dark-accent-hover);
+}
+
+.password-wrapper #togglePassword.active {
+    color: var(--minimal-dark-error);
+    transform: rotate(15deg);
+}
+
+.password-wrapper #togglePassword.active:hover {
+    background: rgba(207, 102, 121, 0.1);
+}
 
 /* ------------------ Result Box ------------------ */
 
 .result {
-    margin-top: 10px;
-    padding: 10px;
-    background: #eef;
-    border-radius: 6px;
+    margin-top: 15px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    color: var(--minimal-dark-text-primary);
+    display: none;
+    animation: fadeIn 0.3s ease-out;
 }
 
-/* ------------------ History Cards ------------------ */
+.result.visible {
+    display: block;
+}
+
+.result a {
+    color: var(--minimal-dark-accent-secondary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.result a:hover {
+    text-decoration: underline;
+    color: var(--minimal-dark-accent-hover);
+}
+
+/* Auth result specific styling */
+#authResult {
+    background: rgba(207, 102, 121, 0.1);
+    border-left: 4px solid var(--minimal-dark-error);
+}
+
+/* Shorten result states */
+#shortenResult.success {
+    background: rgba(3, 218, 198, 0.1);
+    border-left: 4px solid var(--minimal-dark-success);
+}
+
+#shortenResult.error {
+    background: rgba(207, 102, 121, 0.1);
+    border-left: 4px solid var(--minimal-dark-error);
+}
+
+#shortenResult.warning {
+    background: rgba(255, 179, 71, 0.1);
+    border-left: 4px solid var(--minimal-dark-warning);
+}
+
+/* ------------------ Shorten Section ------------------ */
+
+#urlInput {
+    margin-bottom: 20px;
+}
+
+#appSection .section:first-child button {
+    background-color: var(--minimal-dark-accent-primary);
+    color: white;
+    background-image: linear-gradient(to bottom, var(--minimal-dark-accent-primary), #5000c8);
+    width: 100%;
+}
+
+#appSection .section:first-child button:hover {
+    background-color: var(--minimal-dark-accent-hover);
+    background-image: linear-gradient(to bottom, var(--minimal-dark-accent-hover), var(--minimal-dark-accent-primary));
+    box-shadow: 0 5px 15px rgba(98, 0, 238, 0.4);
+}
+
+/* ------------------ History Section ------------------ */
+
+.section.history {
+    background: var(--minimal-dark-surface-lighter);
+    border: 1px solid var(--minimal-dark-border);
+}
 
 .history-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 15px;
 }
 
 .history-card {
-    background: white;
-    border: 1px solid #e5e7eb;
+    background: var(--minimal-dark-surface);
+    border: 1px solid var(--minimal-dark-border);
     border-radius: 10px;
-    padding: 14px 16px;
+    padding: 18px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: box-shadow 0.2s ease, transform 0.1s ease;
+    transition: all 0.3s ease;
 }
 
 .history-card:hover {
-    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-    transform: translateY(-1px);
+    border-color: var(--minimal-dark-border-light);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
 }
 
 .history-info {
@@ -157,44 +320,108 @@ button:hover {
 
 .history-title {
     font-weight: 600;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    color: var(--minimal-dark-text-primary);
 }
 
 .history-url a {
-    color: #2563eb;
+    color: var(--minimal-dark-accent-secondary);
     text-decoration: none;
     word-break: break-all;
+    font-size: 0.95rem;
 }
 
 .history-url a:hover {
     text-decoration: underline;
+    color: var(--minimal-dark-accent-hover);
 }
 
 .history-date {
     font-size: 0.85rem;
-    color: #6b7280;
-    margin-top: 4px;
+    color: var(--minimal-dark-text-tertiary);
+    margin-top: 6px;
 }
 
-/* delete button */
 .history-delete button {
     background: transparent;
-    border: none;
+    border: 1px solid var(--minimal-dark-border);
     font-size: 1.2rem;
     cursor: pointer;
+    color: var(--minimal-dark-text-tertiary);
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
 }
 
 .history-delete button:hover {
-    color: #dc2626;
+    color: var(--minimal-dark-error);
+    border-color: var(--minimal-dark-error);
+    background: rgba(207, 102, 121, 0.1);
 }
 
-/* ------------------ Auth ------------------ */
+/* ------------------ Auth Section ------------------ */
 
 #authSection {
     justify-content: center;
+    align-items: center;
+    min-height: 70vh;
 }
 
-#authResult {
+#authSection .section {
+    max-width: 450px;
+    width: 100%;
+}
+
+#authForm {
+    display: flex;
+    flex-direction: column;
+}
+
+#authForm button {
     margin-top: 10px;
-    color: red;
+}
+
+/* ------------------ Responsive ------------------ */
+
+@media (max-width: 768px) {
+    body {
+        padding: 15px;
+    }
+    
+    .container {
+        flex-direction: column;
+        gap: 25px;
+    }
+    
+    .hero {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .hero h1 {
+        font-size: 2rem;
+    }
+    
+    .section {
+        min-width: 100%;
+        padding: 20px;
+    }
+}
+
+/* ------------------ Animations ------------------ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.section {
+    animation: fadeIn 0.5s ease-out;
 }

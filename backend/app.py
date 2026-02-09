@@ -154,7 +154,7 @@ def get_urls():
         {
             "id": r["id"],
             "link_name": r["link_name"],
-            "short_url": f"{BASE_URL}/{r['pipiurl']}",
+            "short_url": f"{BASE_URL}/{r['short']}",
             "original": r["original"],
             "created_at": r["dob"].strftime("%Y-%m-%d %H:%M")
         }

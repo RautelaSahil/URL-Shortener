@@ -54,12 +54,12 @@ def get_user_by_username(username):
 
 # ------------------ URL Helpers ------------------
 
-def short_code_exists(pipiurl):
+def short_code_exists(short):
     conn = get_connection()
     cursor = conn.cursor()
 
-    query = "SELECT 1 FROM dmforlink WHERE pipiurl = %s LIMIT 1"
-    cursor.execute(query, (pipiurl,))
+    query = "SELECT 1 FROM link WHERE short = %s LIMIT 1"
+    cursor.execute(query, (short,))
     exists = cursor.fetchone() is not None
 
     cursor.close()
@@ -67,16 +67,16 @@ def short_code_exists(pipiurl):
     return exists
 
 
-def insert_url_with_name(original, pipiurl, link_name, user_id):
+def insert_url_with_name(original, short, link_name, user_id):
     conn = get_connection()
     cursor = conn.cursor()
 
     try:
         query = """
-            INSERT INTO dmforlink (original, pipiurl, link_name, user_id)
+            INSERT INTO link (original, short, link_name, user_id)
             VALUES (%s, %s, %s, %s)
         """
-        cursor.execute(query, (original, pipiurl, link_name, user_id))
+        cursor.execute(query, (original, short, link_name, user_id))
         conn.commit()
     finally:
         cursor.close()
@@ -88,8 +88,8 @@ def get_all_urls(user_id):
     cursor = conn.cursor(dictionary=True)
 
     query = """
-        SELECT id, link_name, original, pipiurl, dob
-        FROM dmforlink
+        SELECT id, link_name, original, short, dob
+        FROM link
         WHERE user_id = %s
         ORDER BY dob DESC
     """
@@ -106,7 +106,7 @@ def delete_url_by_id(url_id, user_id):
     cursor = conn.cursor()
 
     query = """
-        DELETE FROM dmforlink
+        DELETE FROM link
         WHERE id = %s AND user_id = %s
     """
     cursor.execute(query, (url_id, user_id))
@@ -116,12 +116,12 @@ def delete_url_by_id(url_id, user_id):
     conn.close()
 
 
-def get_original(pipiurl):
+def get_original(short):
     conn = get_connection()
     cursor = conn.cursor()
 
-    query = "SELECT original FROM dmforlink WHERE pipiurl = %s"
-    cursor.execute(query, (pipiurl,))
+    query = "SELECT original FROM link WHERE short = %s"
+    cursor.execute(query, (short,))
     result = cursor.fetchone()
 
     cursor.close()

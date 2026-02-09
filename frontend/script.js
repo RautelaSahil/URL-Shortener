@@ -5,36 +5,134 @@ const API_BASE = "http://127.0.0.1:5000";
 const authSection = document.getElementById("authSection");
 const appSection = document.getElementById("appSection");
 const authResult = document.getElementById("authResult");
+const shortenResult = document.getElementById("shortenResult");
 const logoutBtn = document.getElementById("logoutBtn");
-
 const authForm = document.getElementById("authForm");
 const togglePasswordBtn = document.getElementById("togglePassword");
 const passwordInput = document.getElementById("password");
 
-// ------------------ Auth UX ------------------
+// ------------------ Helper Functions ------------------
 
-// Submit login on Enter (form submit)
-authForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    login();
+// Show auth result
+function showAuthResult(message, isError = true) {
+    if (message) {
+        authResult.textContent = message;
+        authResult.classList.add('visible');
+        if (isError) {
+            authResult.style.borderLeft = "4px solid var(--minimal-dark-error)";
+            authResult.style.background = "rgba(207, 102, 121, 0.1)";
+        } else {
+            authResult.style.borderLeft = "4px solid var(--minimal-dark-success)";
+            authResult.style.background = "rgba(3, 218, 198, 0.1)";
+        }
+    } else {
+        hideAuthResult();
+    }
+}
+
+// Hide auth result
+function hideAuthResult() {
+    authResult.classList.remove('visible');
+    authResult.textContent = '';
+}
+
+// Initialize password toggle
+function initPasswordToggle() {
+    if (togglePasswordBtn && passwordInput) {
+        // Set initial icon
+        togglePasswordBtn.innerHTML = '<i class="fas fa-eye"></i>';
+        togglePasswordBtn.setAttribute("aria-label", "Show password");
+        
+        togglePasswordBtn.addEventListener("click", () => {
+            const isPassword = passwordInput.type === "password";
+            
+            if (isPassword) {
+                passwordInput.type = "text";
+                togglePasswordBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                togglePasswordBtn.classList.add("active");
+                togglePasswordBtn.setAttribute("aria-label", "Hide password");
+            } else {
+                passwordInput.type = "password";
+                togglePasswordBtn.innerHTML = '<i class="fas fa-eye"></i>';
+                togglePasswordBtn.classList.remove("active");
+                togglePasswordBtn.setAttribute("aria-label", "Show password");
+            }
+        });
+    }
+}
+
+// ------------------ Initialization ------------------
+
+// Check if user is already logged in
+function checkAuthStatus() {
+    fetch(`${API_BASE}/api/check-auth`, {
+        method: "GET",
+        credentials: "include"
+    })
+    .then(res => {
+        if (res.ok) {
+            return res.json();
+        }
+        throw new Error('Not authenticated');
+    })
+    .then(data => {
+        if (data.authenticated) {
+            showApp();
+        } else {
+            hideAuthResult();
+        }
+    })
+    .catch(() => {
+        authSection.style.display = "flex";
+        appSection.style.display = "none";
+        logoutBtn.style.display = "none";
+        hideAuthResult();
+    });
+}
+
+// ------------------ Event Listeners ------------------
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initPasswordToggle();
+    checkAuthStatus();
+    
+    // Hide auth result when user starts typing
+    const usernameInput = document.getElementById("username");
+    if (usernameInput) {
+        usernameInput.addEventListener("input", hideAuthResult);
+    }
+    
+    if (passwordInput) {
+        passwordInput.addEventListener("input", hideAuthResult);
+    }
+    
+    // Hide shorten result when user starts typing
+    const urlInput = document.getElementById("urlInput");
+    if (urlInput) {
+        urlInput.addEventListener("input", function() {
+            shortenResult.classList.remove("visible");
+            shortenResult.textContent = '';
+        });
+    }
 });
 
-// Toggle password visibility
-togglePasswordBtn.addEventListener("click", () => {
-    const isHidden = passwordInput.type === "password";
+// Submit login on Enter
+if (authForm) {
+    authForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        login();
+    });
+}
 
-    passwordInput.type = isHidden ? "text" : "password";
-    togglePasswordBtn.textContent = isHidden ? "HIDE" : "SHOW";
-});
-
-// ------------------ Auth ------------------
+// ------------------ Auth Functions ------------------
 
 function register() {
     const username = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value.trim();
 
     if (!username || !password) {
-        authResult.innerText = "Username and password required";
+        showAuthResult("Username and password required");
         return;
     }
 
@@ -47,14 +145,14 @@ function register() {
     .then(res => res.json())
     .then(data => {
         if (data.error) {
-            authResult.innerText = data.error;
+            showAuthResult(data.error);
         } else {
-            authResult.innerText = "";
+            hideAuthResult();
             showApp();
         }
     })
     .catch(() => {
-        authResult.innerText = "Server error";
+        showAuthResult("Server error");
     });
 }
 
@@ -63,7 +161,7 @@ function login() {
     const password = document.getElementById("password").value.trim();
 
     if (!username || !password) {
-        authResult.innerText = "Username and password required";
+        showAuthResult("Username and password required");
         return;
     }
 
@@ -76,14 +174,14 @@ function login() {
     .then(res => res.json())
     .then(data => {
         if (data.error) {
-            authResult.innerText = data.error;
+            showAuthResult(data.error);
         } else {
-            authResult.innerText = "";
+            hideAuthResult();
             showApp();
         }
     })
     .catch(() => {
-        authResult.innerText = "Server error";
+        showAuthResult("Server error");
     });
 }
 
@@ -96,6 +194,8 @@ function logout() {
         authSection.style.display = "flex";
         appSection.style.display = "none";
         logoutBtn.style.display = "none";
+        document.getElementById("authForm").reset();
+        hideAuthResult();
     });
 }
 
@@ -106,6 +206,7 @@ function showApp() {
     appSection.style.display = "flex";
     logoutBtn.style.display = "inline-block";
     loadHistory();
+    hideAuthResult();
 }
 
 // ------------------ Shorten ------------------
@@ -116,7 +217,8 @@ function shortenUrl() {
     const longUrl = input.value.trim();
 
     if (!longUrl) {
-        result.innerText = "Please enter a URL";
+        result.textContent = "Please enter a URL";
+        result.className = "result visible warning";
         return;
     }
 
@@ -129,19 +231,18 @@ function shortenUrl() {
     .then(res => res.json())
     .then(data => {
         if (data.error) {
-            result.innerText = data.error;
+            result.textContent = data.error;
+            result.className = "result visible error";
         } else {
-            result.innerHTML = `
-                Short URL:
-                <a href="${data.short_url}" target="_blank">
-                    ${data.short_url}
-                </a>
-            `;
+            result.innerHTML = `Short URL: <a href="${data.short_url}" target="_blank">${data.short_url}</a>`;
+            result.className = "result visible success";
+            input.value = "";
             loadHistory();
         }
     })
     .catch(() => {
-        result.innerText = "Server error";
+        result.textContent = "Server error";
+        result.className = "result visible error";
     });
 }
 
@@ -160,25 +261,33 @@ function loadHistory() {
         const list = document.getElementById("historyList");
         list.innerHTML = "";
 
+        if (data.length === 0) {
+            list.innerHTML = `
+                <div class="history-card" style="text-align: center; color: var(--minimal-dark-text-tertiary);">
+                    <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                    No shortened URLs yet. Create your first one above!
+                </div>
+            `;
+            return;
+        }
+
         data.forEach(item => {
             const card = document.createElement("div");
             card.className = "history-card";
-
             card.innerHTML = `
                 <div class="history-info">
-                    <div class="history-title">${item.link_name}</div>
+                    <div class="history-title">${item.link_name || 'Short Link'}</div>
                     <div class="history-url">
-                        <a href="${item.short_url}" target="_blank">
-                            ${item.short_url}
-                        </a>
+                        <a href="${item.short_url}" target="_blank">${item.short_url}</a>
                     </div>
                     <div class="history-date">${item.created_at}</div>
                 </div>
                 <div class="history-delete">
-                    <button onclick="deleteLink(${item.id})">🗑️</button>
+                    <button onclick="deleteLink(${item.id})" aria-label="Delete link">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
             `;
-
             list.appendChild(card);
         });
     })
@@ -197,5 +306,13 @@ function deleteLink(id) {
         credentials: "include"
     })
     .then(() => loadHistory())
-    .catch(() => alert("Delete failed"));
+    .catch(() => {
+        const result = document.getElementById("shortenResult");
+        result.textContent = "Failed to delete link";
+        result.className = "result visible error";
+        setTimeout(() => {
+            result.className = "result";
+            result.textContent = '';
+        }, 3000);
+    });
 }
