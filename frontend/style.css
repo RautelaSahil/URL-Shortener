@@ -229,9 +229,35 @@ button:active {
 }
 
 .result.visible {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+.result-actions{
+    display: none;
+    gap: 8px;
+    margin-left: auto;
+}
+.action-btn{
+     background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    color: #155724;
+    font-size: 1rem;
+    border-radius: 4px;
+    transition: background-color 0.2s, color 0.2s;
 }
 
+.action-btn:hover {
+    background-color: rgba(0,0,0,0.1);
+    color: #000;
+}
+.result.visible:hover .result-actions{
+    display: flex;
+}
 .result a {
     color: var(--minimal-dark-accent-secondary);
     text-decoration: none;
@@ -289,12 +315,16 @@ button:active {
 .section.history {
     background: var(--minimal-dark-surface-lighter);
     border: 1px solid var(--minimal-dark-border);
+    max-height: 70vh;
 }
 
 .history-list {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    max-height: 80%;
+    overflow-y: auto;
+
 }
 
 .history-card {
@@ -358,7 +388,60 @@ button:active {
     border-color: var(--minimal-dark-error);
     background: rgba(207, 102, 121, 0.1);
 }
-
+.option-menu {
+    position: absolute;
+    background: var(--minimal-dark-surface-lighter);
+    border: 1px solid var(--minimal-dark-border);
+    border-radius: 4px;
+    /* box-shadow: 0 2px 10px var(--minimal-dark-accent-primary); */
+    padding: 8px 0;
+    z-index: 1000;
+    display: none;
+    
+}
+.option-menu button {
+    display: block;
+    width: 90%;
+    padding: 8px;
+    margin-left: 4%;
+    border: none;
+    background: none;
+    text-align: center;
+    cursor: pointer;
+    font-size: 14px;
+    color: white;
+}
+.option-menu button:hover {
+    background-color: var(--minimal-dark-surface-lightest);
+    color: var(--minimal-dark-accent-hover)
+}
+.history-list::-webkit-scrollbar {
+    margin-left: 10px ;
+    width: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.history-list:hover::-webkit-scrollbar {
+    opacity: 1;
+}
+.history-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.history-list::-webkit-scrollbar-thumb {
+    background: var(--minimal-dark-accent-secondary);
+    border-radius: 4px;
+}
+.history-list::-webkit-scrollbar-thumb:hover {
+    background: var(--minimal-dark-accent-secondary);
+}
+.history-list{
+    scrollbar-width: thin;
+    scrollbar-color: var(--minimal-dark-accent-hover) transparent;
+    transition: scrollbar-color 0.3s ease;
+}
+.history-list:hover {
+    scrollbar-color: var(--minimal-dark-accent-primary) transparent;
+}
 /* ------------------ Auth Section ------------------ */
 
 #authSection {
