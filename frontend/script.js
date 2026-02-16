@@ -210,7 +210,12 @@ function showApp() {
 }
 
 // ------------------ Shorten ------------------
-
+document.getElementById('urlInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault(); // optional, prevents any unexpected form submission if inside a form
+        document.querySelector('button[onclick="shortenUrl()"]').click();
+    }
+});
 function shortenUrl() {
     const input = document.getElementById("urlInput");
     const result = document.getElementById("shortenResult");
@@ -234,15 +239,59 @@ function shortenUrl() {
             result.textContent = data.error;
             result.className = "result visible error";
         } else {
-            result.innerHTML = `Short URL: <a href="${data.short_url}" target="_blank">${data.short_url}</a>`;
+            result.innerHTML = `
+                <span class="result-text">Short URL:</span>
+                <a href="${data.short_url}" target="_blank" class="result-link">${data.short_url}</a>
+                <div class="result-actions">
+                    <button class="action-btn copy-btn" aria-label="Copy URL"><i class="fas fa-copy"></i></button>
+                    <button class="action-btn share-btn" aria-label="Share URL"><i class="fas fa-share-alt"></i></button>
+                </div>
+            `;
             result.className = "result visible success";
             input.value = "";
             loadHistory();
+
+        // Attach event handlers for the new buttons
+            setupResultActions(result);
         }
     })
+    
     .catch(() => {
         result.textContent = "Server error";
         result.className = "result visible error";
+    });
+}
+function setupResultActions(resultDiv) {
+    const copyBtn = resultDiv.querySelector('.copy-btn');
+    const shareBtn = resultDiv.querySelector('.share-btn');
+    const link = resultDiv.querySelector('.result-link');
+    if (!link) return;
+    const url = link.href; // get full URL from the <a> tag
+
+    copyBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // prevent link click
+        e.preventDefault();
+        navigator.clipboard.writeText(url).then(() => {
+            alert('URL copied to clipboard!');
+        }).catch(() => alert('Copy failed.'));
+    });
+
+    shareBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (navigator.share) {
+            navigator.share({
+                title: 'Shared URL',
+                url: url
+            }).catch(err => {
+                if (err.name !== 'AbortError') alert('Share failed.');
+            });
+        } else {
+            // Fallback: copy
+            navigator.clipboard.writeText(url).then(() => {
+                alert('URL copied to clipboard (share not supported).');
+            }).catch(() => alert('Copy failed.'));
+        }
     });
 }
 
@@ -274,11 +323,13 @@ function loadHistory() {
         data.forEach(item => {
             const card = document.createElement("div");
             card.className = "history-card";
+            // Use item.short_url – adjust property name if different (e.g., item.short_link)
+            const url = item.short_url || item.long_url || '#';
             card.innerHTML = `
                 <div class="history-info">
                     <div class="history-title">${item.link_name || 'Short Link'}</div>
                     <div class="history-url">
-                        <a href="${item.short_url}" target="_blank">${item.short_url}</a>
+                        <a href="${url}" target="_blank">${url}</a>
                     </div>
                     <div class="history-date">${item.created_at}</div>
                 </div>
@@ -290,12 +341,111 @@ function loadHistory() {
             `;
             list.appendChild(card);
         });
+
+        // --- Setup the custom option menu (only once) ---
+        setupOptionMenu();
     })
     .catch(err => {
         console.error("History load failed", err);
     });
 }
 
+// ----- Option menu logic (call this once after the first load) -----
+function setupOptionMenu() {
+    // If menu already exists, do nothing
+    if (document.querySelector('.option-menu')) return;
+
+    // Create the floating menu
+    const menu = document.createElement('div');
+    menu.className = 'option-menu';
+    menu.innerHTML = `
+        <button class="option-open">Open</button>
+        <button class="option-copy">Copy</button>
+        <button class="option-share">Share</button>
+    `;
+    document.body.appendChild(menu);
+
+    // Hide menu initially
+    menu.style.display = 'none';
+
+    // Event delegation: listen for clicks on any .history-url inside #historyList
+    const historyList = document.getElementById('historyList');
+    historyList.addEventListener('click', (e) => {
+        const historyUrlDiv = e.target.closest('.history-url');
+        if (!historyUrlDiv) return; // clicked elsewhere
+
+        e.preventDefault();      // prevent anchor navigation
+        e.stopPropagation();     // avoid triggering other listeners
+
+        const anchor = historyUrlDiv.querySelector('a');
+        if (!anchor) return;
+        const url = anchor.href; // full URL from the <a> tag
+
+        // Position menu near cursor
+        const { clientX, clientY } = e;
+        const menuWidth = 150;    // approximate width
+        const menuHeight = 100;   // approximate height
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        let left = clientX + 20;  // 20px to the right
+        let top = clientY;
+
+        // Adjust if menu would go off right edge
+        if (left + menuWidth > viewportWidth) {
+            left = clientX - menuWidth - 10;
+        }
+        // Adjust if menu would go off bottom edge
+        if (top + menuHeight > viewportHeight) {
+            top = clientY - menuHeight - 10;
+        }
+
+        menu.style.left = left + 'px';
+        menu.style.top = top + 'px';
+        menu.style.display = 'block';
+        menu.dataset.url = url; // store URL for actions
+    });
+
+    // Hide menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (menu.style.display === 'block' && !menu.contains(e.target)) {
+            menu.style.display = 'none';
+        }
+    });
+
+    // Handle clicks on menu options
+    menu.addEventListener('click', (e) => {
+        e.stopPropagation(); // prevent immediate hiding by document click
+        const target = e.target;
+        const url = menu.dataset.url;
+        if (!url) return;
+
+        if (target.classList.contains('option-open')) {
+            window.open(url, '_blank');
+            menu.style.display = 'none';
+        }
+        else if (target.classList.contains('option-copy')) {
+            navigator.clipboard.writeText(url)
+                .then(() => alert('Link copied to clipboard!'))
+                .catch(() => alert('Copy failed.'));
+            menu.style.display = 'none';
+        }
+        else if (target.classList.contains('option-share')) {
+            if (navigator.share) {
+                navigator.share({ title: 'Shared link', url })
+                    .catch(err => {
+                        if (err.name !== 'AbortError') alert('Share failed.');
+                    });
+            } else {
+                // fallback: copy
+                navigator.clipboard.writeText(url)
+                    .then(() => alert('Link copied to clipboard (share not supported).'))
+                    .catch(() => alert('Copy failed.'));
+            }
+            menu.style.display = 'none';
+        }
+    });
+}
 // ------------------ Delete ------------------
 
 function deleteLink(id) {
