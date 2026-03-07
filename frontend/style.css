@@ -51,6 +51,23 @@ body {
     letter-spacing: 1px;
 }
 
+.hero-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.hero-actions button {
+    background: transparent;
+    border: 1px solid var(--minimal-dark-border);
+    color: var(--minimal-dark-text-secondary);
+    padding: 8px 16px;
+}
+
+.hero-actions button:hover {
+    color: var(--minimal-dark-accent-secondary);
+    border-color: var(--minimal-dark-accent-secondary);
+}
+
 /* ------------------ Layout ------------------ */
 
 .container {
@@ -169,7 +186,7 @@ button:active {
     border-color: var(--minimal-dark-error);
 }
 
-/* ------------------ Password Toggle (Color Change Icon) ------------------ */
+/* ------------------ Password Toggle ------------------ */
 
 .password-wrapper {
     position: relative;
@@ -208,13 +225,43 @@ button:active {
     color: var(--minimal-dark-accent-hover);
 }
 
-.password-wrapper #togglePassword.active {
-    color: var(--minimal-dark-error);
-    transform: rotate(15deg);
+/* ------------------ Shorten Buttons Layout ------------------ */
+
+.shorten-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 5px;
 }
 
-.password-wrapper #togglePassword.active:hover {
-    background: rgba(207, 102, 121, 0.1);
+.primary-btn {
+    flex: 1;
+    background: linear-gradient(
+        to bottom,
+        var(--minimal-dark-accent-primary),
+        #5000c8
+    );
+    color: white;
+}
+
+.primary-btn:hover {
+    background: linear-gradient(
+        to bottom,
+        var(--minimal-dark-accent-hover),
+        var(--minimal-dark-accent-primary)
+    );
+    box-shadow: 0 5px 15px rgba(98, 0, 238, 0.4);
+}
+
+.secondary-btn {
+    flex: 1;
+    background: var(--minimal-dark-surface-lighter);
+    color: var(--minimal-dark-text-secondary);
+    border: 1px solid var(--minimal-dark-border);
+}
+
+.secondary-btn:hover {
+    background: var(--minimal-dark-surface-lightest);
+    color: var(--minimal-dark-text-primary);
 }
 
 /* ------------------ Result Box ------------------ */
@@ -235,29 +282,33 @@ button:active {
     border-radius: 4px;
     transition: background-color 0.2s;
 }
-.result-actions{
+
+.result-actions {
     display: none;
     gap: 8px;
     margin-left: auto;
 }
-.action-btn{
-     background: none;
+
+.action-btn {
+    background: none;
     border: none;
     cursor: pointer;
     padding: 4px 8px;
-    color: #155724;
+    color: var(--minimal-dark-accent-primary);
     font-size: 1rem;
     border-radius: 4px;
     transition: background-color 0.2s, color 0.2s;
 }
 
 .action-btn:hover {
-    background-color: rgba(0,0,0,0.1);
-    color: #000;
+    background-color: var(--minimal-dark-bg);
+    color: var(--minimal-dark-accent-hover);
 }
-.result.visible:hover .result-actions{
+
+.result.visible:hover .result-actions {
     display: flex;
 }
+
 .result a {
     color: var(--minimal-dark-accent-secondary);
     text-decoration: none;
@@ -269,13 +320,11 @@ button:active {
     color: var(--minimal-dark-accent-hover);
 }
 
-/* Auth result specific styling */
 #authResult {
     background: rgba(207, 102, 121, 0.1);
     border-left: 4px solid var(--minimal-dark-error);
 }
 
-/* Shorten result states */
 #shortenResult.success {
     background: rgba(3, 218, 198, 0.1);
     border-left: 4px solid var(--minimal-dark-success);
@@ -290,26 +339,54 @@ button:active {
     background: rgba(255, 179, 71, 0.1);
     border-left: 4px solid var(--minimal-dark-warning);
 }
+/* ------------------ Custom Input with Cross ------------------ */
 
-/* ------------------ Shorten Section ------------------ */
-
-#urlInput {
-    margin-bottom: 20px;
+.custom-input-wrapper {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    align-items: center;
+    animation: fadeIn 0.3s ease-out;
 }
 
-#appSection .section:first-child button {
-    background-color: var(--minimal-dark-accent-primary);
-    color: white;
-    background-image: linear-gradient(to bottom, var(--minimal-dark-accent-primary), #5000c8);
-    width: 100%;
+.custom-input-wrapper input {
+    flex: 1;
+    margin-bottom: 0;
 }
 
-#appSection .section:first-child button:hover {
-    background-color: var(--minimal-dark-accent-hover);
-    background-image: linear-gradient(to bottom, var(--minimal-dark-accent-hover), var(--minimal-dark-accent-primary));
-    box-shadow: 0 5px 15px rgba(98, 0, 238, 0.4);
+.cross-btn {
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    background: var(--minimal-dark-surface-lighter);
+    color: var(--minimal-dark-text-secondary);
+    border: 1px solid var(--minimal-dark-border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
 }
 
+.cross-btn:hover {
+    background: var(--minimal-dark-surface-lightest);
+    color: var(--minimal-dark-error);
+    border-color: var(--minimal-dark-error);
+    transform: rotate(90deg);
+}
+
+.cross-btn i {
+    transition: transform 0.3s ease;
+}
+
+.cross-btn:hover i {
+    transform: scale(1.1);
+}
+
+#generateBtn {
+    transition: width 0.3s ease;
+}
 /* ------------------ History Section ------------------ */
 
 .section.history {
@@ -324,7 +401,37 @@ button:active {
     gap: 15px;
     max-height: 80%;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--minimal-dark-accent-hover) transparent;
+    transition: scrollbar-color 0.3s ease;
+}
 
+.history-list:hover {
+    scrollbar-color: var(--minimal-dark-accent-primary) transparent;
+}
+
+.history-list::-webkit-scrollbar {
+    margin-left: 10px;
+    width: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.history-list:hover::-webkit-scrollbar {
+    opacity: 1;
+}
+
+.history-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+    background: var(--minimal-dark-accent-secondary);
+    border-radius: 4px;
+}
+
+.history-list::-webkit-scrollbar-thumb:hover {
+    background: var(--minimal-dark-accent-secondary);
 }
 
 .history-card {
@@ -354,11 +461,24 @@ button:active {
     color: var(--minimal-dark-text-primary);
 }
 
+.history-url {
+    cursor: context-menu;
+    padding: 4px 0;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.history-url:hover {
+    background-color: rgba(98, 0, 238, 0.1);
+}
+
 .history-url a {
     color: var(--minimal-dark-accent-secondary);
     text-decoration: none;
     word-break: break-all;
     font-size: 0.95rem;
+    display: inline-block;
+    padding: 2px 4px;
 }
 
 .history-url a:hover {
@@ -370,6 +490,7 @@ button:active {
     font-size: 0.85rem;
     color: var(--minimal-dark-text-tertiary);
     margin-top: 6px;
+    line-height: 1.5;
 }
 
 .history-delete button {
@@ -388,60 +509,47 @@ button:active {
     border-color: var(--minimal-dark-error);
     background: rgba(207, 102, 121, 0.1);
 }
+
+/* ------------------ Option Menu (3 Options) ------------------ */
+
 .option-menu {
     position: absolute;
     background: var(--minimal-dark-surface-lighter);
     border: 1px solid var(--minimal-dark-border);
-    border-radius: 4px;
-    /* box-shadow: 0 2px 10px var(--minimal-dark-accent-primary); */
+    border-radius: 8px;
     padding: 8px 0;
     z-index: 1000;
     display: none;
-    
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    min-width: 140px;
+    animation: fadeIn 0.2s ease-out;
 }
+
 .option-menu button {
     display: block;
     width: 90%;
-    padding: 8px;
-    margin-left: 4%;
+    margin: 4px auto;
+    padding: 10px;
     border: none;
     background: none;
     text-align: center;
     cursor: pointer;
     font-size: 14px;
-    color: white;
+    color: var(--minimal-dark-text-primary);
+    border-radius: 6px;
+    transition: all 0.2s ease;
 }
+
 .option-menu button:hover {
     background-color: var(--minimal-dark-surface-lightest);
-    color: var(--minimal-dark-accent-hover)
+    color: var(--minimal-dark-accent-hover);
+    transform: translateY(-1px);
 }
-.history-list::-webkit-scrollbar {
-    margin-left: 10px ;
-    width: 8px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
+
+.option-menu button:active {
+    transform: translateY(0);
 }
-.history-list:hover::-webkit-scrollbar {
-    opacity: 1;
-}
-.history-list::-webkit-scrollbar-track {
-    background: transparent;
-}
-.history-list::-webkit-scrollbar-thumb {
-    background: var(--minimal-dark-accent-secondary);
-    border-radius: 4px;
-}
-.history-list::-webkit-scrollbar-thumb:hover {
-    background: var(--minimal-dark-accent-secondary);
-}
-.history-list{
-    scrollbar-width: thin;
-    scrollbar-color: var(--minimal-dark-accent-hover) transparent;
-    transition: scrollbar-color 0.3s ease;
-}
-.history-list:hover {
-    scrollbar-color: var(--minimal-dark-accent-primary) transparent;
-}
+
 /* ------------------ Auth Section ------------------ */
 
 #authSection {
@@ -462,6 +570,91 @@ button:active {
 
 #authForm button {
     margin-top: 10px;
+}
+
+/* ------------------ Profile Overlay ------------------ */
+
+.profile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: none;
+    justify-content: flex-end;
+    align-items: stretch;
+    z-index: 2000;
+}
+
+.profile-panel {
+    width: 22%;
+    min-width: 300px;
+    background: var(--minimal-dark-surface);
+    padding: 35px 30px;
+    display: flex;
+    flex-direction: column;
+    animation: slideInRight 0.3s ease forwards;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.6);
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 35px;
+}
+
+.back-btn {
+    cursor: pointer;
+    font-size: 1.6rem;
+    color: var(--minimal-dark-text-secondary);
+    transition: 0.2s ease;
+}
+
+.back-btn:hover {
+    color: var(--minimal-dark-accent-secondary);
+}
+
+.profile-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.stat-item p {
+    font-size: 0.9rem;
+    color: var(--minimal-dark-text-tertiary);
+}
+
+.stat-item h2 {
+    margin-top: 8px;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--minimal-dark-accent-secondary);
+}
+
+/* ------------------ Animations ------------------ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+.section {
+    animation: fadeIn 0.5s ease-out;
 }
 
 /* ------------------ Responsive ------------------ */
@@ -490,21 +683,8 @@ button:active {
         min-width: 100%;
         padding: 20px;
     }
-}
-
-/* ------------------ Animations ------------------ */
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
+    
+    .profile-panel {
+        width: 80%;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.section {
-    animation: fadeIn 0.5s ease-out;
 }
