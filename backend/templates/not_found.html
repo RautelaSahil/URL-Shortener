@@ -2,37 +2,110 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>URL Not Found</title>
+    <title>404 - Not Found</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --minimal-dark-bg: #0f0f0f;
+            --minimal-dark-surface: #1a1a1a;
+            --minimal-dark-surface-lighter: #2a2a2a;
+            --minimal-dark-text-primary: #f0f0f0;
+            --minimal-dark-text-secondary: #b0b0b0;
+            --minimal-dark-border: #444;
+            --minimal-dark-accent-primary: #6200ee;
+            --minimal-dark-accent-hover: #7c29ff;
+            --minimal-dark-error: #cf6679;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--minimal-dark-bg);
+            color: var(--minimal-dark-text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .hero {
+            max-width: 1200px;
+            margin: 0 auto 40px auto;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--minimal-dark-border);
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(to right, var(--minimal-dark-accent-primary), #bb86fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .not-found-wrapper {
             display: flex;
-            height: 100vh;
-            align-items: center;
             justify-content: center;
+            align-items: center;
+            height: 75vh;
         }
-        .card {
-            background: white;
-            padding: 30px 40px;
-            border-radius: 6px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+
+        .not-found-card {
+            background: var(--minimal-dark-surface);
+            padding: 40px;
+            border-radius: 12px;
             text-align: center;
+            border: 1px solid var(--minimal-dark-border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 500px;
+            width: 100%;
         }
-        h1 {
-            color: #e63946;
-            margin-bottom: 10px;
+
+        .not-found-card h1 {
+            font-size: 2rem;
+            color: var(--minimal-dark-error);
+            margin-bottom: 15px;
         }
-        p {
-            color: #555;
+
+        .not-found-card p {
+            color: var(--minimal-dark-text-secondary);
+            margin-bottom: 25px;
+        }
+
+        .not-found-card a {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 8px;
+            background: var(--minimal-dark-accent-primary);
+            color: white;
+            text-decoration: none;
+            transition: 0.3s ease;
+        }
+
+        .not-found-card a:hover {
+            background: var(--minimal-dark-accent-hover);
         }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>404 – URL Not Found</h1>
-        <p>The short URL you entered does not exist.</p>
-        <p>Please check the link and try again.</p>
+
+<div class="hero">
+    <h1><i class="fas fa-link" style="margin-right: 10px;"></i>Shortly</h1>
+</div>
+
+<div class="not-found-wrapper">
+    <div class="not-found-card">
+        <h1>404 - Page Not Found</h1>
+        <p>
+            The short link you entered does not exist
+            or may have been removed.
+        </p>
+        <a href="http://127.0.0.1:5500/frontend/index.html">Return to Dashboard</a>
     </div>
+</div>
+
 </body>
 </html>
