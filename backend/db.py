@@ -4,16 +4,18 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 # ------------------ Connection ------------------
 
 def get_connection():
-    return mysql.connector.connect(
-        host=os.getenv("DB_HOST"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME")
-    )
+    try:
+        return mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME")
+        )
+    except mysql.connector.Error as err:
+        raise Exception(f"Database connection failed: {err}")
 
 
 # ------------------ Users ------------------
@@ -21,7 +23,6 @@ def get_connection():
 def create_user(username, password_hash):
     conn = get_connection()
     cursor = conn.cursor()
-
     try:
         query = """
             INSERT INTO users (username, password_hash)
@@ -38,18 +39,28 @@ def create_user(username, password_hash):
 def get_user_by_username(username):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
+    try:
+        query = """
+            SELECT id, username, password_hash
+            FROM users
+            WHERE username = %s
+        """
+        cursor.execute(query, (username,))
+        return cursor.fetchone()
+    finally:
+        cursor.close()
+        conn.close()
 
-    query = """
-        SELECT id, username, password_hash
-        FROM users
-        WHERE username = %s
-    """
-    cursor.execute(query, (username,))
-    user = cursor.fetchone()
 
-    cursor.close()
-    conn.close()
-    return user
+def get_username_by_id(user_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("SELECT username FROM users WHERE id = %s", (user_id,))
+        return cursor.fetchone()
+    finally:
+        cursor.close()
+        conn.close()
 
 
 # ------------------ URL Helpers ------------------
@@ -57,20 +68,18 @@ def get_user_by_username(username):
 def short_code_exists(short):
     conn = get_connection()
     cursor = conn.cursor()
-
-    query = "SELECT 1 FROM link WHERE short = %s LIMIT 1"
-    cursor.execute(query, (short,))
-    exists = cursor.fetchone() is not None
-
-    cursor.close()
-    conn.close()
-    return exists
+    try:
+        query = "SELECT 1 FROM link WHERE short = %s LIMIT 1"
+        cursor.execute(query, (short,))
+        return cursor.fetchone() is not None
+    finally:
+        cursor.close()
+        conn.close()
 
 
 def insert_url_with_name(original, short, link_name, user_id):
     conn = get_connection()
     cursor = conn.cursor()
-
     try:
         query = """
             INSERT INTO link (original, short, link_name, user_id)
@@ -86,45 +95,77 @@ def insert_url_with_name(original, short, link_name, user_id):
 def get_all_urls(user_id):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-
-    query = """
-        SELECT id, link_name, original, short, dob
-        FROM link
-        WHERE user_id = %s
-        ORDER BY dob DESC
-    """
-    cursor.execute(query, (user_id,))
-    rows = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-    return rows
+    try:
+        query = """
+            SELECT id, link_name, original, short, dob, click_count
+            FROM link
+            WHERE user_id = %s
+            ORDER BY dob DESC
+        """
+        cursor.execute(query, (user_id,))
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
 
 
 def delete_url_by_id(url_id, user_id):
     conn = get_connection()
     cursor = conn.cursor()
+    try:
+        query = """
+            DELETE FROM link
+            WHERE id = %s AND user_id = %s
+        """
+        cursor.execute(query, (url_id, user_id))
+        conn.commit()
+    finally:
+        cursor.close()
+        conn.close()
 
-    query = """
-        DELETE FROM link
-        WHERE id = %s AND user_id = %s
-    """
-    cursor.execute(query, (url_id, user_id))
-    conn.commit()
 
-    cursor.close()
-    conn.close()
-
-
-def get_original(short):
+def get_original_and_increment(short):
     conn = get_connection()
     cursor = conn.cursor()
+    try:
+        select_query = "SELECT original FROM link WHERE short = %s"
+        cursor.execute(select_query, (short,))
+        result = cursor.fetchone()
 
-    query = "SELECT original FROM link WHERE short = %s"
-    cursor.execute(query, (short,))
-    result = cursor.fetchone()
+        if not result:
+            return None
 
-    cursor.close()
-    conn.close()
+        original_url = result[0]
 
-    return result[0] if result else None
+        update_query = """
+            UPDATE link
+            SET click_count = click_count + 1
+            WHERE short = %s
+        """
+        cursor.execute(update_query, (short,))
+        conn.commit()
+
+        return original_url
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ------------------ Stats ------------------
+
+def get_user_stats(user_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        query = """
+            SELECT 
+                COUNT(*) AS total_links,
+                COALESCE(SUM(click_count), 0) AS total_clicks
+            FROM link
+            WHERE user_id = %s
+        """
+        cursor.execute(query, (user_id,))
+        return cursor.fetchone()
+    finally:
+        cursor.close()
+        conn.close()
