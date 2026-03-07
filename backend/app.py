@@ -3,21 +3,25 @@ from flask_cors import CORS
 import random
 import string
 import requests
+import os
 from bs4 import BeautifulSoup
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from .db import (
+from db import (
+    get_username_by_id,
     short_code_exists,
     insert_url_with_name,
-    get_original,
+    get_original_and_increment,
     get_all_urls,
     delete_url_by_id,
     create_user,
-    get_user_by_username
+    get_user_by_username,
+    get_user_stats
 )
 
-BASE_URL = "http://127.0.0.1:5000"
+# ------------------ CONFIG ------------------
 
+BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:5000")
 
 app = Flask(__name__)
 
@@ -26,16 +30,15 @@ app = Flask(__name__)
 CORS(
     app,
     supports_credentials=True,
-    origins=["http://127.0.0.1:5500"]
-
+    origins=["http://127.0.0.1:5500", "http://localhost:5500", "http://127.0.0.1:5501"]
 )
 
-app.secret_key = "dev-secret-change-later"
+app.secret_key = os.getenv("SECRET_KEY", "dev-secret-change-later")
 
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=False
+    SESSION_COOKIE_SECURE=False  # Set to True in production with HTTPS
 )
 
 # ------------------ Helpers ------------------
@@ -64,16 +67,28 @@ def login_required():
     return "user_id" in session
 
 
-# ------------------ Basic ------------------
+# ------------------ Basic Routes ------------------
 
 @app.route("/")
 def home():
-    return "Shortly Backend Running"
+    return render_template("not_found.html")  # This is just a placeholder, frontend is separate
 
 
 @app.route("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template("not_found.html"), 404
+
+
+@app.route("/api/check-auth", methods=["GET"])
+def check_auth():
+    return jsonify({
+        "authenticated": "user_id" in session
+    }), 200
 
 
 # ------------------ Auth ------------------
@@ -92,7 +107,7 @@ def register():
         session.clear()
         session["user_id"] = user_id
         return jsonify({"message": "Registered"}), 201
-    except Exception:
+    except Exception as e:
         return jsonify({"error": "User already exists"}), 400
 
 
@@ -126,13 +141,22 @@ def shorten_url():
 
     data = request.get_json(silent=True) or {}
     long_url = data.get("long_url")
+    custom_code = data.get("custom_code")
 
     if not is_valid_url(long_url):
         return jsonify({"error": "Invalid URL"}), 400
 
-    short_code = generate_short_code()
-    while short_code_exists(short_code):
+    # Validate custom code if provided
+    if custom_code:
+        if not custom_code.isalnum() or len(custom_code) > 10:
+            return jsonify({"error": "Custom code must be alphanumeric and max 10 characters"}), 400
+        if short_code_exists(custom_code):
+            return jsonify({"error": "Custom short code already exists"}), 400
+        short_code = custom_code
+    else:
         short_code = generate_short_code()
+        while short_code_exists(short_code):
+            short_code = generate_short_code()
 
     insert_url_with_name(
         long_url,
@@ -156,10 +180,26 @@ def get_urls():
             "link_name": r["link_name"],
             "short_url": f"{BASE_URL}/{r['short']}",
             "original": r["original"],
+            "click_count": r["click_count"],
             "created_at": r["dob"].strftime("%Y-%m-%d %H:%M")
         }
         for r in rows
     ]), 200
+
+
+@app.route("/api/stats", methods=["GET"])
+def get_stats():
+    if not login_required():
+        return jsonify({"error": "Unauthorized"}), 401
+
+    stats = get_user_stats(session["user_id"])
+    user = get_username_by_id(session["user_id"])
+
+    return jsonify({
+        "username": user["username"],
+        "total_links": stats["total_links"],
+        "total_clicks": stats["total_clicks"]
+    }), 200
 
 
 @app.route("/api/urls/<int:url_id>", methods=["DELETE"])
@@ -175,7 +215,7 @@ def delete_url(url_id):
 
 @app.route("/<short_code>")
 def redirect_short_url(short_code):
-    original = get_original(short_code)
+    original = get_original_and_increment(short_code)
     if original:
         return redirect(original, code=302)
     return render_template("not_found.html"), 404
