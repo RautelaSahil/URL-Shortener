@@ -11,9 +11,13 @@
 
 <div class="hero">
     <h1><i class="fas fa-link" style="margin-right: 10px;"></i>Shortly</h1>
-    <button id="logoutBtn" onclick="logout()" style="display:none;">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </button>
+    
+    <div class="hero-actions">
+        <button onclick="openProfile()">Profile</button>
+        <button id="logoutBtn" onclick="logout()" style="display:none;">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </div>
 </div>
 
 <!-- AUTH SECTION -->
@@ -61,24 +65,74 @@
 
 <!-- APP SECTION -->
 <div class="container" id="appSection" style="display:none;">
-    <!-- SHORTEN -->
-    <div class="section expanded">
-        <h2><i class="fas fa-compress-alt"></i> Shorten URL</h2>
+<!-- SHORTEN -->
+<div class="section expanded">
+    <h2><i class="fas fa-compress-alt"></i> Shorten URL</h2>
 
-        <input type="url" id="urlInput" placeholder="https://example.com/very-long-url..." autocomplete="off">
-        <button onclick="shortenUrl()">
-            <i class="fas fa-magic"></i> Shorten URL
+    <input
+        type="url"
+        id="urlInput"
+        placeholder="https://example.com/very-long-url..."
+        autocomplete="off"
+    >
+
+    <!-- Custom input area with cross button -->
+    <div class="custom-input-wrapper" id="customInputWrapper" style="display: none;">
+        <input
+            type="text"
+            id="customCodeInput"
+            placeholder="Enter custom short code (alphanumeric, max 10 chars)"
+            autocomplete="off"
+            maxlength="10"
+        >
+        <button class="cross-btn" onclick="closeCustomInput()" aria-label="Close custom input">
+            <i class="fas fa-times"></i>
         </button>
-        <div class="result" id="shortenResult"></div>
     </div>
 
+    <div class="shorten-actions">
+        <button class="secondary-btn" id="customBtn" onclick="toggleCustomInput()">
+            <i class="fas fa-pen"></i> Custom
+        </button>
+
+        <button class="primary-btn" id="generateBtn" onclick="shortenUrl()">
+            <i class="fas fa-magic"></i> Generate
+        </button>
+    </div>
+
+    <div class="result" id="shortenResult"></div>
+</div>
     <!-- HISTORY -->
     <div class="section expanded history">
-        <h2><i class="fas fa-history"></i> History</h2>
+        <h2><i class="fas fa-history"></i> Your Links</h2>
 
         <div class="history-list" id="historyList">
-            <!-- cards injected by JS -->
+            <!-- Cards injected by JS -->
         </div>
+    </div>
+</div>
+
+<!-- PROFILE OVERLAY -->
+<div id="profileOverlay" class="profile-overlay" onclick="closeProfile(event)">
+    <div class="profile-panel" onclick="event.stopPropagation()">
+
+        <div class="profile-header">
+            <span class="back-btn" onclick="closeProfile()">&lt;</span>
+            <h3 id="profileUsername"></h3>
+        </div>
+
+        <div class="profile-stats">
+            <div class="stat-item">
+                <p>Total Links</p>
+                <h2 id="profileLinks"></h2>
+            </div>
+
+            <div class="stat-item">
+                <p>Total Clicks</p>
+                <h2 id="profileClicks"></h2>
+            </div>
+        </div>
+
     </div>
 </div>
 
