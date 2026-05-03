@@ -9,140 +9,132 @@
 </head>
 <body>
 
-<div class="hero">
-    <h1><i class="fas fa-link" style="margin-right: 10px;"></i>Shortly</h1>
-    
-    <div class="hero-actions">
-        <button onclick="openProfile()">Profile</button>
-        <button id="logoutBtn" onclick="logout()" style="display:none;">
-            <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
+<!-- ═══════════════════ NAVBAR ═══════════════════ -->
+<nav class="navbar" id="navbar" style="display:none;">
+    <div class="navbar-brand">Shortly</div>
+    <div class="navbar-links">
+        <a class="nav-link" href="#hero" onclick="goToHero(); return false;">Shorten</a>
+        <a class="nav-link" href="#dashboard" onclick="goToDashboard(); return false;">Dashboard</a>
+        <button class="nav-btn" onclick="openProfile()">Profile</button>
+        <button class="nav-btn danger" onclick="logout()">Logout</button>
     </div>
-</div>
+</nav>
 
-<!-- AUTH SECTION -->
-<div class="container" id="authSection" style="display: flex;">
-    <div class="section expanded">
-        <h2><i class="fas fa-user-lock"></i> Login / Register</h2>
+<!-- ═══════════════════ LOGIN PAGE ═══════════════════ -->
+<section id="loginPage" class="page page-login">
+    <div class="login-card">
+        <div class="card-brand">
+            <h1>Shortly</h1>
+            <p>A simple way to shorten your web pages</p>
+        </div>
+
+        <h2>Sign in</h2>
 
         <form id="authForm">
-            <input
-                type="text"
-                id="username"
-                placeholder="Username"
-                required
-                autocomplete="username"
-            >
-
+            <input type="text" id="username" placeholder="Username" required autocomplete="username">
             <div class="password-wrapper">
-                <input
-                    type="password"
-                    id="password"
-                    placeholder="Password"
-                    required
-                    autocomplete="current-password"
-                >
-                <button
-                    type="button"
-                    id="togglePassword"
-                    aria-label="Toggle password visibility"
-                >
-                    <!-- Icon will be added by JavaScript -->
-                </button>
+                <input type="password" id="password" placeholder="Password" required autocomplete="current-password">
+                <button type="button" id="togglePassword" aria-label="Toggle password visibility"></button>
             </div>
-
-            <button type="submit">
-                <i class="fas fa-sign-in-alt"></i> Login
-            </button>
-            <button type="button" onclick="register()">
-                <i class="fas fa-user-plus"></i> Register
-            </button>
-
+            <button type="submit" class="btn-primary">Login</button>
+            <button type="button" class="btn-secondary" onclick="register()">Register</button>
             <div class="result" id="authResult"></div>
         </form>
     </div>
-</div>
+</section>
 
-<!-- APP SECTION -->
-<div class="container" id="appSection" style="display:none;">
-<!-- SHORTEN -->
-<div class="section expanded">
-    <h2><i class="fas fa-compress-alt"></i> Shorten URL</h2>
+<!-- ═══════════════════ HERO PAGE ═══════════════════ -->
+<section id="heroPage" class="page page-hero" style="display:none;">
+    <div class="hero-content">
+        <div class="hero-heading">
+            <h1>Shortly</h1>
+            <p>A simple way to shorten urls of your choice</p>
+        </div>
 
-    <input
-        type="url"
-        id="urlInput"
-        placeholder="https://example.com/very-long-url..."
-        autocomplete="off"
-    >
+        <div class="hero-form">
+            <input type="url" id="urlInput" placeholder="https://example.com/very-long-url..." autocomplete="off">
 
-    <!-- Custom input area with cross button -->
-    <div class="custom-input-wrapper" id="customInputWrapper" style="display: none;">
-        <input
-            type="text"
-            id="customCodeInput"
-            placeholder="Enter custom short code (alphanumeric, max 10 chars)"
-            autocomplete="off"
-            maxlength="10"
-        >
-        <button class="cross-btn" onclick="closeCustomInput()" aria-label="Close custom input">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
+            <div class="custom-input-wrapper" id="customInputWrapper" style="display:none;">
+                <input type="text" id="customCodeInput" placeholder="Custom short code (max 10 chars)" autocomplete="off" maxlength="10">
+                <button class="cross-btn" onclick="closeCustomInput()" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
 
-    <div class="shorten-actions">
-        <button class="secondary-btn" id="customBtn" onclick="toggleCustomInput()">
-            <i class="fas fa-pen"></i> Custom
-        </button>
+            <div class="hero-actions">
+                <button class="btn-ghost" id="customBtn" onclick="toggleCustomInput()">Custom</button>
+                <button class="btn-primary" id="generateBtn" onclick="shortenUrl()">Generate</button>
+            </div>
 
-        <button class="primary-btn" id="generateBtn" onclick="shortenUrl()">
-            <i class="fas fa-magic"></i> Generate
-        </button>
-    </div>
-
-    <div class="result" id="shortenResult"></div>
-</div>
-    <!-- HISTORY -->
-    <div class="section expanded history">
-        <h2><i class="fas fa-history"></i> Your Links</h2>
-
-        <div class="history-list" id="historyList">
-            <!-- Cards injected by JS -->
+            <div class="result" id="shortenResult"></div>
         </div>
     </div>
-</div>
+</section>
 
-<!-- PROFILE OVERLAY -->
+<!-- ═══════════════════ DASHBOARD PAGE ═══════════════════ -->
+<section id="dashboardPage" class="page page-dashboard" style="display:none;">
+    <div class="dashboard-content">
+        <div class="dashboard-header">
+            <h2>Your Links</h2>
+            <span class="link-count" id="linkCount"></span>
+        </div>
+        <div class="history-grid" id="historyList"></div>
+    </div>
+</section>
+
+<!-- ═══════════════════ PROFILE OVERLAY ═══════════════════ -->
 <div id="profileOverlay" class="profile-overlay" onclick="closeProfile(event)">
     <div class="profile-panel" onclick="event.stopPropagation()">
-
         <div class="profile-header">
             <span class="back-btn" onclick="closeProfile()">&lt;</span>
             <h3 id="profileUsername"></h3>
         </div>
-
         <div class="profile-stats">
             <div class="stat-item">
                 <p>Total Links</p>
                 <h2 id="profileLinks"></h2>
             </div>
-
             <div class="stat-item">
                 <p>Total Clicks</p>
                 <h2 id="profileClicks"></h2>
             </div>
         </div>
-
     </div>
 </div>
 
 <script src="script.js"></script>
 <script>
-    // Check if user is already logged in when page loads
+    function goToHero() {
+        showPage('heroPage');
+        history.pushState(null, '', '#hero');
+    }
+
+    function goToDashboard() {
+        showPage('dashboardPage');
+        history.pushState(null, '', '#dashboard');
+        loadHistory();
+    }
+
+    function showPage(pageId) {
+        ['heroPage', 'dashboardPage'].forEach(id => {
+            document.getElementById(id).style.display = 'none';
+        });
+        document.getElementById(pageId).style.display = 'flex';
+    }
+
+    window.addEventListener('popstate', function() {
+        const hash = window.location.hash;
+        if (hash === '#dashboard') {
+            showPage('dashboardPage');
+            loadHistory();
+        } else {
+            showPage('heroPage');
+        }
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
         checkAuthStatus();
     });
 </script>
-
 </body>
 </html>

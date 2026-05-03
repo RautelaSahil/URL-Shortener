@@ -1,36 +1,47 @@
-from flask import Flask, request, jsonify, redirect, render_template, session
+from flask import Flask, request, jsonify, redirect, render_template, session, abort
 from flask_cors import CORS
-import random
-import string
-import requests
 import os
-from bs4 import BeautifulSoup
-from werkzeug.security import generate_password_hash, check_password_hash
+import re
 
-from db import (
+from werkzeug.security import generate_password_hash, check_password_hash
+import logging
+
+# Setup basic logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - [%(name)s] %(message)s')
+logger = logging.getLogger(__name__)
+
+from backend.db import (
     get_username_by_id,
-    short_code_exists,
-    insert_url_with_name,
-    get_original_and_increment,
-    get_all_urls,
-    delete_url_by_id,
     create_user,
     get_user_by_username,
-    get_user_stats
+    get_user_stats,
+    init_db
 )
+
+from backend.services.url_service import (
+    create_short_url,
+    get_user_urls_service,
+    delete_user_url_service,
+    resolve_redirect_service
+)
+
+# Initialize schema explicitly
+init_db()
 
 # ------------------ CONFIG ------------------
 
 BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:5000")
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="../frontend", static_url_path="")
 
 # ------------------ CORS & SESSION ------------------
+
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://127.0.0.1:5500,http://localhost:5500,http://127.0.0.1:5501").split(",")
 
 CORS(
     app,
     supports_credentials=True,
-    origins=["http://127.0.0.1:5500", "http://localhost:5500", "http://127.0.0.1:5501"]
+    origins=CORS_ORIGINS
 )
 
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret-change-later")
@@ -38,29 +49,10 @@ app.secret_key = os.getenv("SECRET_KEY", "dev-secret-change-later")
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=False  # Set to True in production with HTTPS
+    SESSION_COOKIE_SECURE=os.getenv("SESSION_COOKIE_SECURE", "False").lower() == "true"
 )
 
 # ------------------ Helpers ------------------
-
-def generate_short_code(length=6):
-    chars = string.ascii_letters + string.digits
-    return ''.join(random.choice(chars) for _ in range(length))
-
-
-def fetch_link_name(url):
-    try:
-        res = requests.get(url, timeout=5)
-        soup = BeautifulSoup(res.text, "html.parser")
-        if soup.title and soup.title.string:
-            return soup.title.string.strip()[:250]
-    except Exception:
-        pass
-    return url.split("//")[-1].split("/")[0]
-
-
-def is_valid_url(url):
-    return url and url.startswith(("http://", "https://"))
 
 
 def login_required():
@@ -71,7 +63,7 @@ def login_required():
 
 @app.route("/")
 def home():
-    return render_template("not_found.html")  # This is just a placeholder, frontend is separate
+    return app.send_static_file("index.html")
 
 
 @app.route("/health")
@@ -81,7 +73,9 @@ def health():
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template("not_found.html"), 404
+    if request.path.startswith("/api/"):
+        return jsonify({"error": "Not found"}), 404
+    return app.send_static_file("index.html"), 404
 
 
 @app.route("/api/check-auth", methods=["GET"])
@@ -107,8 +101,14 @@ def register():
         session.clear()
         session["user_id"] = user_id
         return jsonify({"message": "Registered"}), 201
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except RuntimeError as e:
+        logger.error(f"Runtime DB error in register: {e}")
+        return jsonify({"error": "Internal server error"}), 500
     except Exception as e:
-        return jsonify({"error": "User already exists"}), 400
+        logger.error(f"Unexpected error in register: {e}", exc_info=True)
+        return jsonify({"error": "An internal server error occurred"}), 500
 
 
 @app.route("/api/login", methods=["POST"])
@@ -117,13 +117,20 @@ def login():
     username = data.get("username")
     password = data.get("password")
 
-    user = get_user_by_username(username)
-    if not user or not check_password_hash(user["password_hash"], password):
-        return jsonify({"error": "Invalid credentials"}), 401
+    try:
+        user = get_user_by_username(username)
+        if not user or not check_password_hash(user["password_hash"], password):
+            return jsonify({"error": "Invalid credentials"}), 401
 
-    session.clear()
-    session["user_id"] = user["id"]
-    return jsonify({"message": "Logged in"}), 200
+        session.clear()
+        session["user_id"] = user["id"]
+        return jsonify({"message": "Logged in"}), 200
+    except RuntimeError as e:
+        logger.error(f"Runtime DB error in login: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+    except Exception as e:
+        logger.error(f"Unexpected error in login: {e}", exc_info=True)
+        return jsonify({"error": "An internal server error occurred"}), 500
 
 
 @app.route("/api/logout", methods=["POST"])
@@ -143,29 +150,17 @@ def shorten_url():
     long_url = data.get("long_url")
     custom_code = data.get("custom_code")
 
-    if not is_valid_url(long_url):
-        return jsonify({"error": "Invalid URL"}), 400
-
-    # Validate custom code if provided
-    if custom_code:
-        if not custom_code.isalnum() or len(custom_code) > 10:
-            return jsonify({"error": "Custom code must be alphanumeric and max 10 characters"}), 400
-        if short_code_exists(custom_code):
-            return jsonify({"error": "Custom short code already exists"}), 400
-        short_code = custom_code
-    else:
-        short_code = generate_short_code()
-        while short_code_exists(short_code):
-            short_code = generate_short_code()
-
-    insert_url_with_name(
-        long_url,
-        short_code,
-        fetch_link_name(long_url),
-        session["user_id"]
-    )
-
-    return jsonify({"short_url": f"{BASE_URL}/{short_code}"}), 200
+    try:
+        short_code = create_short_url(long_url, custom_code, session["user_id"])
+        return jsonify({"short_url": f"{BASE_URL}/{short_code}"}), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except RuntimeError as e:
+        logger.error(f"Runtime DB error in shorten_url: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+    except Exception as e:
+        logger.error(f"Unexpected error in shorten_url: {e}", exc_info=True)
+        return jsonify({"error": "Internal server error"}), 500
 
 
 @app.route("/api/urls", methods=["GET"])
@@ -173,18 +168,25 @@ def get_urls():
     if not login_required():
         return jsonify({"error": "Unauthorized"}), 401
 
-    rows = get_all_urls(session["user_id"])
-    return jsonify([
-        {
-            "id": r["id"],
-            "link_name": r["link_name"],
-            "short_url": f"{BASE_URL}/{r['short']}",
-            "original": r["original"],
-            "click_count": r["click_count"],
-            "created_at": r["dob"].strftime("%Y-%m-%d %H:%M")
-        }
-        for r in rows
-    ]), 200
+    try:
+        rows = get_user_urls_service(session["user_id"])
+        return jsonify([
+            {
+                "id": r["id"],
+                "link_name": r["link_name"],
+                "short_url": f"{BASE_URL}/{r['short']}",
+                "original": r["original"],
+                "click_count": r["click_count"],
+                "created_at": r["dob"].strftime("%Y-%m-%d %H:%M")
+            }
+            for r in rows
+        ]), 200
+    except RuntimeError as e:
+        logger.error(f"Runtime DB error fetching URLs: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+    except Exception as e:
+        logger.error(f"Unexpected error fetching URLs: {e}", exc_info=True)
+        return jsonify({"error": "An internal server error occurred"}), 500
 
 
 @app.route("/api/stats", methods=["GET"])
@@ -192,14 +194,21 @@ def get_stats():
     if not login_required():
         return jsonify({"error": "Unauthorized"}), 401
 
-    stats = get_user_stats(session["user_id"])
-    user = get_username_by_id(session["user_id"])
+    try:
+        stats = get_user_stats(session["user_id"])
+        user = get_username_by_id(session["user_id"])
 
-    return jsonify({
-        "username": user["username"],
-        "total_links": stats["total_links"],
-        "total_clicks": stats["total_clicks"]
-    }), 200
+        return jsonify({
+            "username": user["username"],
+            "total_links": stats["total_links"],
+            "total_clicks": stats["total_clicks"]
+        }), 200
+    except RuntimeError as e:
+        logger.error(f"Runtime DB error fetching stats: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+    except Exception as e:
+        logger.error(f"Unexpected error fetching stats: {e}", exc_info=True)
+        return jsonify({"error": "An internal server error occurred"}), 500
 
 
 @app.route("/api/urls/<int:url_id>", methods=["DELETE"])
@@ -207,19 +216,43 @@ def delete_url(url_id):
     if not login_required():
         return jsonify({"error": "Unauthorized"}), 401
 
-    delete_url_by_id(url_id, session["user_id"])
-    return "", 204
+    try:
+        delete_user_url_service(url_id, session["user_id"])
+        return "", 204
+    except RuntimeError as e:
+        logger.error(f"Runtime DB error deleting URL: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+    except Exception as e:
+        logger.error(f"Unexpected error deleting URL: {e}", exc_info=True)
+        return jsonify({"error": "An internal server error occurred"}), 500
 
 
 # ------------------ Redirect ------------------
 
 @app.route("/<short_code>")
 def redirect_short_url(short_code):
-    original = get_original_and_increment(short_code)
+
+    # Skip API
+    if short_code.startswith("api"):
+        abort(404)
+
+    # Skip static files
+    if "." in short_code:
+        try:
+            return app.send_static_file(short_code)
+        except Exception:
+            abort(404)
+
+    # Validate short code
+    if not re.match(r"^[a-zA-Z0-9]{3,10}$", short_code):
+        abort(404)
+
+    original = resolve_redirect_service(short_code)
+
     if original:
         return redirect(original, code=302)
-    return render_template("not_found.html"), 404
 
+    abort(404)
 
 # ------------------ Run ------------------
 

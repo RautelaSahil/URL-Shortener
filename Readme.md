@@ -6,7 +6,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB?style=for-the-badge\&logo=python\&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge\&logo=flask\&logoColor=white)
-![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge\&logo=mysql\&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge\&logo=sqlite\&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge\&logo=javascript\&logoColor=black)
 
 **A full-stack URL shortening service with user authentication.**
@@ -38,9 +38,9 @@
 | Category           | Capability                                                       |
 | ------------------ | ---------------------------------------------------------------- |
 | **Authentication** | User registration, login, logout, and secure session handling    |
-| **URL Shortening** | Collision-resistant short-code generation                        |
+| **URL Shortening** | Collision-resistant short-code generation, and custom short codes    |
 | **User Ownership** | Per-user URL history and delete permissions                      |
-| **Metadata**       | Automatic page-title extraction (gracefully degrades on failure) |
+| **Metadata**       | Automatic page-title extraction (asynchronous background worker) |
 | **Security**       | Password hashing with Werkzeug, CORS with credentials            |
 
 ---
@@ -51,7 +51,7 @@
 
 * **Language:** Python
 * **Framework:** Flask
-* **Database:** MySQL (`mysql-connector-python`)
+* **Database:** SQLite (`sqlite3`)
 * **Authentication:** Server-side sessions (secure cookies)
 * **Utilities:** BeautifulSoup4, Requests, Werkzeug
 
@@ -68,7 +68,7 @@
 ```mermaid
 graph TD
     Client[Frontend Client] -->|Fetch API + Cookies| API[Flask Backend]
-    API -->|SQL Connector| DB[(MySQL Database)]
+    API -->|sqlite3| DB[(SQLite Database)]
 
     subgraph Backend Responsibilities
         API -->|Hash Passwords| DB
@@ -97,6 +97,7 @@ The backend acts as the sole authority for authentication, authorization, and da
 | ------ | ---------------- | ---------------------------------- |
 | POST   | `/api/shorten`   | Create a short URL (auth required) |
 | GET    | `/api/urls`      | Fetch user-owned URLs              |
+| GET    | `/api/stats`     | Fetch user click stats             |
 | DELETE | `/api/urls/<id>` | Delete URL (ownership enforced)    |
 
 ### Redirection
@@ -116,14 +117,15 @@ The backend acts as the sole authority for authentication, authorization, and da
 * `password_hash` — VARCHAR, securely stored
 * `created_at` — Timestamp
 
-### `dmforlink`
+### `link`
 
 * `id` (PK) — Integer, auto-increment
 * `original` — TEXT (original URL)
-* `short_code` — VARCHAR, unique
-* `link_name` — VARCHAR (scraped title)
+* `short` — TEXT, unique
+* `link_name` — TEXT (scraped title)
 * `user_id` (FK) — References `users.id` (cascade delete)
-* `created_at` — Timestamp
+* `click_count` — Integer, default 0
+* `dob` — Timestamp
 
 ---
 
@@ -150,14 +152,12 @@ FLASK_SECRET_KEY=generate_a_strong_random_key
 
 ### 3. Initialize Database
 
-```sql
-SOURCE database.sql;
-```
+Database initialization is handled automatically on application startup.
 
 ### 4. Install Dependencies
 
 ```bash
-pip install flask flask-cors mysql-connector-python python-dotenv requests beautifulsoup4
+pip install flask flask-cors python-dotenv requests beautifulsoup4
 ```
 
 ### 5. Run the Application
@@ -178,7 +178,7 @@ Serve `index.html` using a local static server (e.g. VS Code Live Server).
 This project focuses on correctness over scale. Current limitations include:
 
 * [ ] **Rate Limiting** — Currently vulnerable to abuse.
-* [ ] **Async Jobs** — Metadata fetching is synchronous (blocks request).
+* [x] **Async Jobs** — Metadata fetching is asynchronous (non-blocking).
 * [ ] **CSRF Protection** — Standard token protection is planned.
 * [ ] **HTTPS** — Production deployment would enforce HTTPS.
 * [ ] **Scalability** — Short code generation is probabilistic.

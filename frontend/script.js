@@ -2,24 +2,25 @@ const API_BASE = "http://127.0.0.1:5000";
 
 // ------------------ DOM ------------------
 
-const authSection = document.getElementById("authSection");
-const appSection = document.getElementById("appSection");
+// Auth / page elements — matched to current HTML IDs
+const loginPage  = document.getElementById("loginPage");
+const heroPage   = document.getElementById("heroPage");
+const navbar     = document.getElementById("navbar");
 const authResult = document.getElementById("authResult");
 const shortenResult = document.getElementById("shortenResult");
-const logoutBtn = document.getElementById("logoutBtn");
-const authForm = document.getElementById("authForm");
+const authForm   = document.getElementById("authForm");
 const togglePasswordBtn = document.getElementById("togglePassword");
 const passwordInput = document.getElementById("password");
 
 // Overlay elements
-const profileOverlay = document.getElementById("profileOverlay");
+const profileOverlay  = document.getElementById("profileOverlay");
 const profileUsername = document.getElementById("profileUsername");
-const profileLinks = document.getElementById("profileLinks");
-const profileClicks = document.getElementById("profileClicks");
+const profileLinks    = document.getElementById("profileLinks");
+const profileClicks   = document.getElementById("profileClicks");
 
 // Custom input elements
 const customInputWrapper = document.getElementById("customInputWrapper");
-const customBtn = document.getElementById("customBtn");
+const customBtn   = document.getElementById("customBtn");
 const generateBtn = document.getElementById("generateBtn");
 const customInput = document.getElementById("customCodeInput");
 
@@ -155,9 +156,9 @@ function checkAuthStatus() {
         }
     })
     .catch(() => {
-        authSection.style.display = "flex";
-        appSection.style.display = "none";
-        logoutBtn.style.display = "none";
+        // On error keep the login page visible
+        if (loginPage) loginPage.style.display = "flex";
+        if (navbar)    navbar.style.display = "none";
         hideAuthResult();
     });
 }
@@ -209,9 +210,7 @@ function login() {
     .then(res => {
         if (res.status === 401) {
             return res.json().then(data => {
-                if (confirm("User not found. Would you like to register a new account?")) {
-                    register();
-                }
+                showAuthResult(data?.error || "Invalid credentials. Please check your username and password.");
                 return null;
             });
         }
@@ -236,9 +235,12 @@ function logout() {
         credentials: "include"
     })
     .finally(() => {
-        authSection.style.display = "flex";
-        appSection.style.display = "none";
-        logoutBtn.style.display = "none";
+        // Show login, hide app pages and navbar
+        if (loginPage)  loginPage.style.display = "flex";
+        if (heroPage)   heroPage.style.display = "none";
+        const dashPage = document.getElementById("dashboardPage");
+        if (dashPage)   dashPage.style.display = "none";
+        if (navbar)     navbar.style.display = "none";
         document.getElementById("authForm").reset();
         hideAuthResult();
     });
@@ -247,9 +249,10 @@ function logout() {
 // ------------------ App UI ------------------
 
 function showApp() {
-    authSection.style.display = "none";
-    appSection.style.display = "flex";
-    logoutBtn.style.display = "inline-block";
+    // Hide login, show app pages and navbar
+    if (loginPage) loginPage.style.display = "none";
+    if (heroPage)  heroPage.style.display = "flex";
+    if (navbar)    navbar.style.display = "flex";
     loadHistory();
     hideAuthResult();
 }
